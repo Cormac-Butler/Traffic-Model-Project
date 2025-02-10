@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
-import simulationFunctions
+import simulationFunctions as sf
 
 if __name__ == "__main__":
 
     # Set up model parameters and road parameters
-    _, _, steps, steps_measure, _, params = simulationFunctions.init_params()
-
+    Nmax, L, steps, steps_measure, splim, params = sf.init_params()
+    
     # Number of different simulations we will run
-    start_cars = 2 # Start with this many
-    end_cars   = 100 # End with this many
-    step_cars  = 2 # Gap between steps
+    start_cars = 2
+    end_cars   = 100 
+    step_cars  = 2 
 
     # Initialise graph variables
     global_flow   = []
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # Run simulation
     for N in range(start_cars, end_cars + step_cars, step_cars):
 
-        glob_flow, glob_density = simulationFunctions.Simulate_IDM(N,params,steps,steps_measure)
+        glob_flow, glob_density = sf.Simulate_IDM(N,params,steps,steps_measure)
 
         global_flow.append(glob_flow)
         global_density.append(glob_density)

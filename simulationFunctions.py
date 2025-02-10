@@ -24,12 +24,12 @@ def upd_pos_vel(Ncar, pos, vel, acc, headway, dv, posnew, velnew, params):
             t_stop = -vel[i] / acc[i]
 
             # Update position and velocity to stop at t_stop
-            posnew[i] = pos[i] + 0.5 * vel[i] * t_stop
+            posnew[i] = pos[i] + vel[i] * t_stop + 0.5 * acc[i] * t_stop**2
             velnew[i] = 0
 
     return posnew, velnew, acc
 
-def detect_loop(Ncar,pos,vel,acc,posnew,velnew, detect_time,detect_vel, det_point, time_pass):
+def detect_loop(Ncar, pos, vel, acc, posnew, velnew, detect_time, detect_vel, det_point, time_pass):
 
     for i in range(Ncar):
 
@@ -43,7 +43,7 @@ def detect_loop(Ncar,pos,vel,acc,posnew,velnew, detect_time,detect_vel, det_poin
 
     return detect_time, detect_vel
 
-def flow_global(N,velnew,L):
+def flow_global(N, velnew, L):
 
     # Calculate global density (cars per km)
     dens = N / (L / 1000)
@@ -82,43 +82,80 @@ def update_cars(Ncar, pos, vel, posnew, velnew, headway, dv, params):
 
     return pos, vel, headway, dv
 
-def Step(N,pos,vel,headway,dv,params,time_pass,time_measure,L):
+def Step(N, pos, vel, headway, dv, params, time_pass, time_measure, detect_time, detect_vel, det_point, L):
+    
+    # Initialise arrays
+    posnew = np.zeros(N)
+    velnew = np.zeros(N)
+    acc = np.zeros(N)
+    den = 0
+    flo = 0
 
-        posnew=np.zeros(N)
-        velnew=np.zeros(N)
-        acc= np.zeros(N)
-        den = 0
-        flo = 0
+    # Determine the position, velocity at end of interval and acceleration at start
+    posnew, velnew, acc = upd_pos_vel(N, pos, vel, acc, headway, dv, posnew, velnew, params)
 
-        posnew, velnew, acc = upd_pos_vel(N, pos, vel, acc, headway, dv, posnew, velnew, params)
+    # Second phase: After a certain number of steps, activate the detection loop
+    if time_pass > time_measure:
+        
+        # Calculate global flow and density
+        den, flo = flow_global(N, velnew, L)
 
-        if (time_pass > time_measure):
+        # Detection loop for local measurements
+        detect_time, detect_vel = detect_loop(N, pos, vel, acc, posnew, velnew, detect_time, detect_vel, det_point, time_pass)
 
-            #detect_time, detect_vel = detect_loop(N, pos, vel, acc, posnew, velnew, detect_time, detect_vel, det_point, time_pass)
-            den, flo = flow_global(N, velnew, L)
+    # Update the key parameters needed for the next iteration
+    pos, vel, headway, dv = update_cars(N, pos, vel, posnew, velnew, headway, dv, params)
 
-        pos, vel, headway, dv = update_cars(N, pos, vel, posnew, velnew, headway, dv, params)
-
-        return pos, vel, headway, dv, den, flo #, detect_time, detect_vel
+    return pos, vel, headway, dv, den, flo, detect_time, detect_vel
 
 def init_params():
 
-    # TODO add det_point (location of a detection point - not needed initially)
-    Nmax, L, steps, steps_measure, splim = 100, 1000, 1000, 20, 40 # max_cars, len_road, steps_num, steps_bef_measure, speed_limit 
+    # Model parameters
+    Nmax = 100  # Maximum number of cars
+    L = 10000  # Length of ring road (meters)
+    steps = 1000  # Total number of steps
+    steps_measure = 100  # Steps before we start to measure
+    splim = 33  # Speed limit in m/s (approx 108 km/h)
+    des_speed = splim  # Desired speed (m/s)
+    des_speed_inv = 1.0 / splim  # Inverse of desired speed
+    del_t = 0.5  # Time step in seconds
+    acc_exp = 4  # Acceleration exponent
+    time_gap = 1.0  # Time gap in seconds
+    min_gap = 2.0  # Minimum spatial gap in meters
+    comf_decel = 1.5  # Comfortable deceleration in m/s^2
+    acc_max = 1.0  # Maximum acceleration in m/s^2
+    length = 3.0  # Car length in meters
+    det_point = L / 2  # Detection point in meters
 
-    params = [1./splim, 2, 2, 2, 2, 3, 2, 3, L]  # des_speed_inv, acc_exp, time_gap, comf_decel, min_gap, acc_max, del_t, length, L
+    # Params list setup
+    params = [des_speed_inv, acc_exp, time_gap, comf_decel, min_gap, acc_max, del_t, length, L]
 
-    return Nmax, L, steps, steps_measure, splim, params
+    return Nmax, L, steps, steps_measure, splim, params, det_point
 
-def init_simulation(N,L):
+def init_simulation(N, L, params):
 
-  # Initial conditions
-    vel = np.zeros(N)  # Initial velocity (all cars stationary)
-    pos = np.linspace(0, L, N, endpoint=False)  # Initial positions (equally spaced)
-    dv = np.zeros(N)  # Speed differential
-    headway = np.full(N, (L / N) - init_params()[5][7])  # Headway (distance to preceding car)
+    # Initial conditions
+    vel = np.zeros(N) 
+
+    # Check if the road can accommodate all cars with the required spacing
+    total_space_per_car = length + params[4]
+    if N * total_space_per_car > L:
+        raise ValueError(f"Cannot fit {N} cars on a road of length {L} with min_gap={params[4]} and car length={length}.")
+
+    # Calculate initial positions with min_gap
+    for i in range(N):
+        pos[i] = i * (params[7] + params[4])
+
+    dv = np.zeros(N) 
+
+    # Calculate headway
+    headway = np.zeros(N)
+    for i in range(N):
+        next_car = (i + 1) % N
+        headway[i] = (pos[next_car] - pos[i] - params[7]) % L
 
     print(N, 'Cars initialised')
+    
     return vel, pos, dv, headway
 
 def analyse_global(track_flow, track_dens):
@@ -130,10 +167,23 @@ def analyse_global(track_flow, track_dens):
     return glob_flow, glob_dens
 
 def analyse_local(track_det_time, track_det_flow):
-    loc_flow, loc_dens = 0,0
+    
+    # Calculate overall local flow and density from the detection loop data
+    if len(track_det_time) == 0:
+        return 0, 0
+
+    # Local flow: Average velocity at the detection point (cars/hour)
+    loc_flow = np.mean(track_det_vel) * 3600 / 1000
+
+    # Local density: Number of cars passing per unit time (cars/km)
+    time_window = max(track_det_time) - min(track_det_time)
+    if time_window == 0:
+        return 0, 0 
+    loc_dens = len(track_det_time) / (time_window * params[8] / 1000)
+
     return loc_flow, loc_dens
 
-def Simulate_IDM(N,params,steps,time_measure):
+def Simulate_IDM(N, params, steps, time_measure):
   
   L = params[8]
   del_t = params[6]
@@ -150,18 +200,20 @@ def Simulate_IDM(N,params,steps,time_measure):
 
     if (time_pass > time_measure):
 
-        pos, vel, headway, dv, den, flo = Step(N,pos,vel,headway,dv,params,time_pass,time_measure,L)
-
-        track_det_time.append(del_t)
-        track_det_vel.append(dv)
+        pos, vel, headway, dv, den, flo, detect_time, detect_vel = Step(N, pos, vel, headway, dv, params, time_pass, steps_measure * del_t, detect_time, detect_vel, det_point, L)
+            
         track_flow.append(flo)
         track_dens.append(den)
 
+        track_det_time.append(detect_time)
+        track_det_vel.append(detect_vel)
+
     else:
-        pos, vel, headway, dv, den, flo = Step(N,pos,vel,headway,dv,params,time_pass,time_measure,L)
+        pos, vel, headway, dv, den, flo, detect_time, detect_vel = Step(N, pos, vel, headway, dv, params, time_pass, steps_measure * del_t, detect_time, detect_vel, det_point, L)
 
-  glob_flow, glob_dens = analyse_global(track_flow, track_dens)
-  #loc_flow, loc_dens = analyse_local(track_det_time, track_det_flow)
-  print(f'Simulation for car total {N} completed\n')
+    glob_flow, glob_dens = analyse_global(track_flow, track_dens)
+    loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel)
 
-  return glob_flow, glob_dens #, loc_flow, loc_dens
+    print('Simulation for car total', N, 'completed')
+
+    return glob_flow, glob_dens, loc_flow, loc_dens
