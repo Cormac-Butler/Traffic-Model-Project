@@ -41,3 +41,5 @@ if __name__ == "__main__":
     f3 = plt.figure()
     plt.plot(global_average_velocity, global_density)
     plt.show()
+
+    print('hi')
