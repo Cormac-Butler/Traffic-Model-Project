@@ -24,11 +24,15 @@ if __name__ == "__main__":
     # Run simulation
     for N in range(start_cars, end_cars + step_cars, step_cars):
         glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, params, steps, steps_measure, det_point)
+        
         global_flow.append(glob_flow)
         global_density.append(glob_density)
+
         local_flow.append(loc_flow)
         local_density.append(loc_dens)
+        
         global_average_velocity.append((glob_flow*1000)/(glob_density * 3600))
+        local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
 
     # Plot global flow vs. global density
     plt.figure()
@@ -48,9 +52,18 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
-    # Plot average velocity vs. density (global and local)
+    # Plot average velocity vs. density (global)
     plt.figure()
     plt.plot(global_density, global_average_velocity, 'bo-', label='Global Average Velocity')
+    plt.xlabel('Density (cars/km)')
+    plt.ylabel('Average Velocity (m/s)')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Plot average velocity vs. density (local)
+    plt.figure()
+    plt.plot(local_density, local_average_velocity, 'ro-', label='Local Average Velocity')
     plt.xlabel('Density (cars/km)')
     plt.ylabel('Average Velocity (m/s)')
     plt.legend()

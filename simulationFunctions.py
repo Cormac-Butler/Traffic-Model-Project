@@ -209,10 +209,10 @@ def Simulate_IDM(N, params, steps, steps_measure,det_point):
             track_flow.append(flo)
             track_dens.append(den)
 
-            track_det_time.extend(detect_time[detect_time > 0])
-            track_det_vel.extend(detect_vel[detect_vel > 0])
+            track_det_time.extend(detect_time)
+            track_det_vel.extend(detect_vel)
         else:
-            pos, vel, headway, dv, den, flo, detect_time, detect_vel = Step(N, pos, vel, headway, dv, params, time_pass, steps_measure * del_t, detect_time, detect_vel, det_point, L)
+            pos, vel, headway, dv, den, flo, _, _ = Step(N, pos, vel, headway, dv, params, time_pass, steps_measure * del_t, [], [], det_point, L)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel)
