@@ -1,6 +1,7 @@
 class VehicleClass:
 
     def __init__(self, car_id, lane, pos, vel, acc, headway, dv):
+
         self.car_id = car_id
         self.lane = lane
         self.pos = pos
