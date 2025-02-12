@@ -1,42 +1,55 @@
 import matplotlib.pyplot as plt
 import simulationFunctions as sf
+import multiprocessing as mp
+
+def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length):
+
+    # Run simulation
+    glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    
+    # Compute average velocity
+    glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density > 0 else 0
+    loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600) if loc_dens > 0 else 0
+
+    return N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
+
 
 if __name__ == "__main__":
-
+    
     # Model parameters
-    max_cars = 1000  # Maximum number of cars
-    road_length = 6000  # Length of ring road (meters)
-    steps = 1000  # Total number of steps
-    steps_before_measure = 100  # Steps before we start to measure
-    speed_limit = 30  # Speed limit in m/s (approx 108 km/h)
-    detection_point = road_length / 2  # Detection point in meters
-    time_step = 0.5
+    max_cars = 1000  
+    road_length = 6000  
+    steps = 1000  
+    steps_before_measure = 100  
+    speed_limit = 30  
+    detection_point = road_length / 2  
+    time_step = 0.5  
 
-    # Number of different simulations we will run
     start_cars = 100
     end_cars = max_cars
     step_cars = 100
 
-    # Initialize graph variables
-    global_flow = []
-    local_flow = []
-    global_density = []
-    local_density = []
-    global_average_velocity = []
-    local_average_velocity  = []
+    # List of car counts to simulate
+    car_counts = range(start_cars, end_cars + step_cars, step_cars)
 
-    # Run simulation
-    for N in range(start_cars, end_cars + step_cars, step_cars):
-        glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    # Parallel processing using multiprocessing Pool
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length) for N in car_counts])
+
+    # Unpack results
+    global_flow, local_flow = [], []
+    global_density, local_density = [], []
+    global_average_velocity, local_average_velocity = [], []
+
+    for res in results:
+        N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
         
         global_flow.append(glob_flow)
         global_density.append(glob_density)
-        
         local_flow.append(loc_flow)
         local_density.append(loc_dens)
-        
-        global_average_velocity.append((glob_flow * 1000) / (glob_density * 3600))
-        local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
+        global_average_velocity.append(glob_avg_velocity)
+        local_average_velocity.append(loc_avg_velocity)
 
     # Plot global flow vs. global density
     plt.figure()
@@ -47,7 +60,7 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
-    # Plot global flow vs. global density
+    # Plot flow vs. velocity
     plt.figure()
     plt.plot(global_flow, global_average_velocity, 'bo-', label='Global Flow')
     plt.xlabel('Flow (cars/hour)')
@@ -55,7 +68,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
     plt.show()
-    
+
     # Plot local flow vs. local density
     plt.figure()
     plt.plot(local_density, local_flow, 'ro-', label='Local Flow')
