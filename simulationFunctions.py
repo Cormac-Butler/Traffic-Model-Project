@@ -142,7 +142,7 @@ def init_simulation(N,L, params):
     # Check if the road can accommodate all cars with the required spacing
     total_space_per_car = params[7] + params[4]
     if N * total_space_per_car > L:
-        raise ValueError(f"Cannot fit {N} cars on a road of length {L} with min_gap={params[4]} and car length={arams[7]}.")
+        raise ValueError(f"Cannot fit {N} cars on a road of length {L} with min_gap={params[4]} and car length={params[7]}.")
 
     # Calculate initial positions with min_gap
     for i in range(N):

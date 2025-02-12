@@ -7,9 +7,9 @@ if __name__ == "__main__":
     Nmax, L, steps, steps_measure, splim, params, det_point = sf.init_params()
     
     # Number of different simulations we will run
-    start_cars = 2
-    end_cars   = 50
-    step_cars  = 2 
+    start_cars = 100
+    end_cars   = 1000
+    step_cars  = 100
 
     # Initialise graph variables
     global_flow   = []
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         local_density.append(loc_dens)
         
         global_average_velocity.append((glob_flow*1000)/(glob_density * 3600))
-        local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
+        #local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
 
     # Plot global flow vs. global density
     plt.figure()
