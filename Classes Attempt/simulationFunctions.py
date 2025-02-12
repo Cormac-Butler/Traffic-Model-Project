@@ -2,7 +2,7 @@ import numpy as np
 from VehicleClass import VehicleClass as vc
 
 def init_simulation(N, L):
-   
+    np.random.seed(20)
     cars = []
 
     lane = 0
@@ -15,14 +15,22 @@ def init_simulation(N, L):
     accexp = 4
     desSpeed = 30
 
-    # Calculate initial positions with min_gap
-    for i in range(N):
-        pos[i] = i * (length[i] + min_gap[i])
+    # Generate random positions for cars while maintaining the minimum gap
+    pos = np.sort(np.random.uniform(0, L, N))
+
+    # Ensure the minimum gap is maintained
+    for i in range(1, N):
+        if pos[i] - pos[i - 1] < min_gap[i - 1] + length[i]:
+            pos[i] = pos[i - 1] + min_gap[i - 1] + length[i]
+
+    # Wrap around the last car to ensure it doesn't overlap with the first car
+    if (pos[-1] + min_gap[-1] + length[0]) % L < pos[0]:
+        pos[-1] = (pos[0] - min_gap[-1] - length[0]) % L
 
     # Calculate headway
     for i in range(N):
         next_car = (i + 1) % N
-        headway = [length[next_car] + min_gap[i]]
+        headway = [(pos[next_car] - pos[i]) % L]
 
         car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
@@ -39,22 +47,34 @@ def flow_global(N, velnew, L):
     dens = N / (L / 1000)
 
     # Calculate global flow (cars per hour)
-    flow = np.sum(velnew) / L * 3600
+    flow = np.mean(velnew) * dens * 3600 / 1000
 
     return dens, flow
 
 
 
-def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step):
+def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light):
 
     posnew = np.zeros(N)
     velnew = np.zeros(N)
     den = 0
     flo = 0
 
+    # Update the traffic light state
+    traffic_light.update(time_step)
+
+    # Get the phantom car (if the light is red)
+    phantom_car = traffic_light.get_phantom_car()
+
+    # Add the phantom car to the list of cars (if it exists)
+    if phantom_car is not None:
+        cars_with_phantom = cars + [phantom_car]
+    else:
+        cars_with_phantom = cars
+
     # Get new positions and velocities
     for i, car in enumerate(cars):
-        car, velnew[i] = car.upd_pos_vel(L, time_step)
+        car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
 
     # Second phase: After a certain number of steps, activate the detection loop
     if time_pass > time_measure:
@@ -104,25 +124,28 @@ def analyse_local(track_det_time, track_det_vel):
     
     # No data yet
     if len(track_det_time) == 0 or len(track_det_vel) == 0:
-        return 0, 0 
-
-    # Calculate local flow: Average velocity at the detection point (cars/hour)
-    loc_flow = np.mean(track_det_vel) * 3600 / 1000
-
-    # Calculate local density: Number of cars passing per unit time (cars/km)
+        return 0, 0  
+    
+    # Define time window for local measurements
     time_window = max(track_det_time) - min(track_det_time)
 
-    # Avoid division by zero
     if time_window == 0:
-        return 0, 0
+        return 0, 0  
 
-    loc_dens = len(track_det_time) / (time_window * 3600 / 1000)
-    
+    # Local flow: Number of cars passing the detection point per unit time (cars/hour)
+    loc_flow = len(track_det_time) / time_window * 3600  
+
+    # Local density: Using the fundamental equation (cars/km)
+    avg_velocity = np.mean(track_det_vel)
+    if avg_velocity == 0:
+        return loc_flow, 0 
+
+    loc_dens = loc_flow / (avg_velocity * 3.6)
+
     return loc_flow, loc_dens
 
 
-
-def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
+def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, speed_limit_zones, traffic_light):
 
     track_flow = []
     track_dens = []
@@ -138,7 +161,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
         time_pass = i * time_step
 
         if time_pass > steps_measure * time_step:
-            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step)
+            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light)
 
             track_flow.append(flo)
             track_dens.append(den)
@@ -146,11 +169,11 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
             track_det_time.extend(detect_time)
             track_det_vel.extend(detect_vel)
         else:
-            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step)
+            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step, speed_limit_zones, traffic_light)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel)
 
     print('Simulation for car total', N, 'completed')
 
-    return glob_flow, glob_dens, loc_flow, loc_dens, track_flow, track_dens
+    return glob_flow, glob_dens, loc_flow, loc_dens

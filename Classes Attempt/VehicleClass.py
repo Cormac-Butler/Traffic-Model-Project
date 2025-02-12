@@ -25,11 +25,37 @@ class VehicleClass:
         self.acc_max = acc_max
         self.length = length
 
-    def upd_pos_vel(self, L, time_step):
+    def get_local_speed_limit(self, speed_limit_zones, traffic_light):
+
+        for zone_start, speed_limit in speed_limit_zones:
+            if self.pos[-1] >= zone_start:
+                self.des_speed = speed_limit
+                self.des_speed_inv = 1.0 / speed_limit
+
+        return self.des_speed
+
+    def upd_pos_vel(self, L, time_step, speed_limit_zones):
+
+        # Get the local speed limit based on the car's current position
+        #self.get_local_speed_limit(speed_limit_zones)
+
+        # Get the local speed limit based on the car's current position
+        self.get_local_speed_limit(traffic_light)
 
         # Calculate desired bumper-to-bumper distance (s*)
         s_star = self.min_gap + max(0, self.vel[-1] * self.time_gap + (self.vel[-1] * self.dv[-1]) / (2 * (self.acc_max * self.comf_decel)**0.5))
 
+        # Handle orange light
+        if traffic_light.state == "orange":
+            distance_to_light = (traffic_light.position - self.pos[-1]) % L
+            time_to_light = distance_to_light / self.vel[-1] if self.vel[-1] > 0 else float('inf')
+
+            # Decide whether to brake or continue
+            if time_to_light > traffic_light.orange_duration:
+                
+                # Brake if the car cannot pass the light before it turns red
+                s_star = min(s_star, distance_to_light - self.min_gap)
+                
         # Calculate acceleration using IDM 
         self.acc.append(self.acc_max * (1 - (self.vel[-1] * self.des_speed_inv)**self.acc_exp - (s_star / self.headway[-1])**2))
 
