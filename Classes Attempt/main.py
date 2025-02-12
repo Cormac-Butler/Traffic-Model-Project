@@ -10,7 +10,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
     
     # Compute average velocity
     glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600)
-    loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600)
+    loc_avg_velocity = 0#(loc_flow * 1000) / (loc_dens * 3600)
 
     return N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
 
@@ -18,7 +18,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 2000  
+    max_cars = 2000
     road_length = 12000  
     steps = 1000  
     steps_before_measure = 100  

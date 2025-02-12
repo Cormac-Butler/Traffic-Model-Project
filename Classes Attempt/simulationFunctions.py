@@ -55,11 +55,8 @@ def flow_global(N, velnew, L):
 
 def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light):
 
-    posnew = np.zeros(N)
-    velnew = np.zeros(N)
-    den = 0
-    flo = 0
-
+    cars_with_phantom = cars
+    '''
     # Update the traffic light state
     traffic_light.update(time_step)
 
@@ -69,21 +66,34 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
     # Add the phantom car to the list of cars (if it exists)
     if phantom_car is not None:
         cars_with_phantom = cars + [phantom_car]
+        N += 1 
     else:
         cars_with_phantom = cars
+    '''
 
-    # Get new positions and velocities
-    for i, car in enumerate(cars):
-        car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
+    posnew = np.zeros(N)
+    velnew = np.zeros(N)
+    den = 0
+    flo = 0
 
-    # Second phase: After a certain number of steps, activate the detection loop
+    # Update positions and velocities for all cars (including the phantom car)
+    for i, car in enumerate(cars_with_phantom):
+        if car.car_id != -1:
+            car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
+
+    # Update headway and velocity differences using the cars_with_phantom list
+    cars_with_phantom = vc.update_cars(cars_with_phantom, N, L)
+    '''
+    # Remove the phantom car from the list before further processing
+    if phantom_car is not None:
+        cars_with_phantom = cars_with_phantom[:-1]
+    '''
+    # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
-
-        # Calculate global flow and density
-        den, flo = flow_global(N, velnew, L)
+        den, flo = flow_global(N, velnew[:N], L)
 
         # Detection loop for local measurements
-        for i, car in enumerate(cars):
+        for i, car in enumerate(cars_with_phantom):
             if (car.pos[-2] < det_point <= posnew[-1]) or (car.pos[-2] < det_point <= posnew[-1] + L):
 
                 s = det_point - car.pos[-2]
@@ -102,11 +112,11 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-2] + car.acc[-2] * delta_t#
+                detect_vel[i] = car.vel[-2] + car.acc[-2] * delta_t
                 
-    cars = vc.update_cars(cars, N, L)
+    #cars = vc.update_cars(cars, N, L)
 
-    return cars, den, flo, detect_time, detect_vel
+    return cars_with_phantom, den, flo, detect_time, detect_vel
 
 
 
