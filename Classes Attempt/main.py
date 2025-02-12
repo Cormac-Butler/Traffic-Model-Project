@@ -4,7 +4,7 @@ import simulationFunctions as sf
 if __name__ == "__main__":
 
     # Model parameters
-    max_cars = 100  # Maximum number of cars
+    max_cars = 1000  # Maximum number of cars
     road_length = 6000  # Length of ring road (meters)
     steps = 1000  # Total number of steps
     steps_before_measure = 100  # Steps before we start to measure
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     # Number of different simulations we will run
     start_cars = 100
-    end_cars = 1000
+    end_cars = max_cars
     step_cars = 100
 
     # Initialize graph variables
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         local_density.append(loc_dens)
         
         global_average_velocity.append((glob_flow * 1000) / (glob_density * 3600))
-        #local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
+        local_average_velocity.append((loc_flow * 1000) / (loc_dens * 3600))
 
     # Plot global flow vs. global density
     plt.figure()

@@ -12,10 +12,10 @@ def init_simulation(N, L):
     acc = [0]
     pos = np.zeros(N)
     dv = [0]
-    length = np.random.uniform(3, 10, N)
+    length = [3] *  N
     min_gap = [2] * N
-    accexp = np.random.randint(6, size=N)
-    desSpeed = np.random.uniform(25, 30, N)
+    accexp = 4
+    desSpeed = 30
 
     # Calculate initial positions with min_gap
     for i in range(N):
@@ -26,7 +26,7 @@ def init_simulation(N, L):
         next_car = (i + 1) % N
         headway = [(pos[next_car] - pos[i] - length[i]) % L]
 
-        car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed[i], accexp[i], 1, min_gap[i], 1.5, 1, length[i])
+        car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
 
     print(N, 'Cars initialised')
@@ -41,7 +41,7 @@ def flow_global(N, velnew, L):
     dens = N / (L / 1000)
 
     # Calculate global flow (cars per hour)
-    flow = np.sum(velnew) / (L * 3600)
+    flow = np.sum(velnew) / L * 3600
 
     return dens, flow
 
@@ -56,11 +56,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
     # Get new positions and velocities
     for i, car in enumerate(cars):
-        posnew[i], velnew[i] = car.upd_pos_vel(time_step)
-
-        if i == 60 and (N == 100):
-            print(posnew[i])
-            print(velnew[i])
+        car, velnew[i] = car.upd_pos_vel(L, time_step)
 
     # Second phase: After a certain number of steps, activate the detection loop
     if time_pass > time_measure:
@@ -70,14 +66,14 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if car.pos[-1] < det_point <= posnew[i]:
+            if (car.pos[-2] < det_point <= posnew[-1]) or (car.pos[-2] < det_point <= posnew[-1] + L):
 
                 # Linear interpolation to find the exact time and speed
-                delta_t = (det_point - car.pos[-1]) / car.vel[-1]
+                delta_t = (det_point - car.pos[-2]) / car.vel[-2]
                 detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-1] + car.acc[-1] * delta_t
+                detect_vel[i] = car.vel[-2] + car.acc[-2] * delta_t
     
-    cars = vc.update_cars(cars, N, posnew, velnew, L)
+    cars = vc.update_cars(cars, N, L)
 
     return cars, den, flo, detect_time, detect_vel
 

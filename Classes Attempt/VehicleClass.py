@@ -25,7 +25,7 @@ class VehicleClass:
         self.acc_max = acc_max
         self.length = length
 
-    def upd_pos_vel(self, time_step):
+    def upd_pos_vel(self, L, time_step):
 
         # Calculate desired bumper-to-bumper distance (s*)
         s_star = self.min_gap + max(0, self.vel[-1] * self.time_gap + (self.vel[-1] * self.dv[-1]) / (2 * (self.acc_max * self.comf_decel)**0.5))
@@ -46,17 +46,14 @@ class VehicleClass:
             # Update position and velocity to stop at t_stop
             posnew = self.pos[-1] + self.vel[-1] * t_stop + 0.5 * self.acc[-1] * t_stop**2
             velnew = 0
-
-        return posnew, velnew
-
-    def update_cars(cars, N, posnew, velnew, L):
-
-        # Update position and velocity
-        for i, car in enumerate(cars):
-
-            car.pos.append(posnew[i] % L)
-            car.vel.append(velnew[i])
         
+        self.pos.append(posnew % L)
+        self.vel.append(velnew)
+
+        return self, velnew
+
+    def update_cars(cars, N, L):
+
         # Update headway and velocity difference
         for i, car in enumerate(cars):
 
@@ -65,7 +62,7 @@ class VehicleClass:
 
             # Calculate headway (rear bumper to rear bumper)
             car.headway.append((next_car.pos[-1] - next_car.length - car.pos[-1]) % L)
-            
+
             # Ensure the minimum gap is maintained
             if car.headway[-1] < car.min_gap:
                 car.headway[-1] = car.min_gap
