@@ -8,8 +8,8 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
     glob_flow, glob_density, loc_flow, loc_dens, overall_flow, overall_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
     
     # Compute average velocity
-    glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density > 0 else 0
-    loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600) if loc_dens > 0 else 0
+    glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600)
+    loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600)
 
     return N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity, overall_flow, overall_dens
 

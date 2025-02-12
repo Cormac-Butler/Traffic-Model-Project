@@ -60,12 +60,12 @@ class VehicleClass:
             # Get next car
             next_car = cars[(i + 1) % N]
 
-            # Calculate headway (rear bumper to rear bumper)
-            car.headway.append((next_car.pos[-1] - next_car.length - car.pos[-1]) % L)
+            # Calculate headway (front bumper to front bumper)
+            car.headway.append((next_car.pos[-1] - car.pos[-1]) % L)
 
             # Ensure the minimum gap is maintained
-            if car.headway[-1] < car.min_gap:
-                car.headway[-1] = car.min_gap
+            if car.headway[-1] < (car.min_gap + next_car.length):
+                car.headway[-1] = car.min_gap + next_car.length
 
                 # Adjust the position of the current car to maintain the minimum gap
                 car.pos[-1] = (next_car.pos[-1] - car.min_gap - next_car.length) % L
