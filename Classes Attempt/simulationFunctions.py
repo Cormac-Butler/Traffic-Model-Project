@@ -81,9 +81,9 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                     delta_t = s / car.vel[-2] if car.vel[-2] > 0 else 0 
                 
                 # Store detection time and velocity at the exact moment of crossing det_point
-                detect_time.append(time_pass + delta_t)
-                detect_vel.append(car.vel[-2] + car.acc[-2] * delta_t)
-        
+                detect_time[i] = time_pass + delta_t
+                detect_vel[i] = car.vel[-2] + car.acc[-2] * delta_t#
+                
     cars = vc.update_cars(cars, N, L)
 
     return cars, den, flo, detect_time, detect_vel
