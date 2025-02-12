@@ -5,20 +5,20 @@ import multiprocessing as mp
 def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length):
 
     # Run simulation
-    glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    glob_flow, glob_density, loc_flow, loc_dens, overall_flow, overall_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
     
     # Compute average velocity
     glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density > 0 else 0
     loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600) if loc_dens > 0 else 0
 
-    return N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
+    return N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity, overall_flow, overall_dens
 
 
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 1000  
-    road_length = 6000  
+    max_cars = 2000  
+    road_length = 11000  
     steps = 1000  
     steps_before_measure = 100  
     speed_limit = 30  
@@ -40,16 +40,28 @@ if __name__ == "__main__":
     global_flow, local_flow = [], []
     global_density, local_density = [], []
     global_average_velocity, local_average_velocity = [], []
+    overall_flow, overall_density = [], []
 
     for res in results:
-        N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
-        
+        N, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity, over_flow, over_dens = res
+
         global_flow.append(glob_flow)
         global_density.append(glob_density)
         local_flow.append(loc_flow)
         local_density.append(loc_dens)
         global_average_velocity.append(glob_avg_velocity)
         local_average_velocity.append(loc_avg_velocity)
+        overall_flow.append(over_flow)
+        overall_density.append(over_dens)
+
+    # Plot overall global flow vs. global density
+    plt.figure()
+    plt.plot(overall_density, overall_flow, 'bo-', label='Global Flow')
+    plt.xlabel('Density (cars/km)')
+    plt.ylabel('Flow (cars/hour)')
+    plt.legend()
+    plt.grid()
+    plt.show()
 
     # Plot global flow vs. global density
     plt.figure()
