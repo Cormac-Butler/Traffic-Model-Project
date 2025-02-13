@@ -1,6 +1,5 @@
 import numpy as np
 from VehicleClass import VehicleClass as vc
-import math
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -18,23 +17,26 @@ def init_simulation(N, L):
     pos = np.zeros(N)
 
     #'''
-    # Generate random positions for cars while maintaining the minimum gap
-    pos = np.sort(np.random.uniform(0, L, N))
+    pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
-    for i in range(1, N):
-        if pos[i] - pos[i - 1] < min_gap[i - 1] + length[i]:
-            pos[i] = pos[i - 1] + min_gap[i - 1] + length[i]
-
-    # Wrap around the last car to ensure it doesn't overlap with the first car
-    if (pos[-1] + min_gap[-1] + length[0]) % L < pos[0]:
-        pos[-1] = (pos[0] - min_gap[-1] - length[0]) % L
+    for i in range(0, N):
+        i = i % N
+        j = (i + 1) % N
+ 
+        if pos[j] > pos[i]:
+            if (pos[j] - pos[i]) < min_gap[i] + length[j]:
+                pos[j] = (pos[i] + min_gap[i] + length[j]) % L
+        elif pos[j] + L > pos[i]:
+            if (pos[j] + L - pos[i]) < min_gap[i] + length[j]:
+                pos[j] = (pos[i] + min_gap[i] + length[j]) % L
+    #'''
     '''
-
     # Calculate initial positions with min_gap
     for i in range(N):
         pos[i] = i * (length[i] + min_gap[i])
     '''
+
     # Calculate headway
     for i in range(N):
         next_car = (i + 1) % N

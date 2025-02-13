@@ -112,7 +112,6 @@ class VehicleClass:
             next_car = cars[(i + 1) % N]
 
             # Calculate headway (front bumper to front bumper)
-
             if next_car.pos[-1] > car.pos[-1]:
                 car.headway.append(next_car.pos[-1] - car.pos[-1])
             else:
