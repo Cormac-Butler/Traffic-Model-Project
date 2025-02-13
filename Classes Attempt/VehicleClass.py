@@ -82,8 +82,9 @@ class VehicleClass:
 
         # Ensure velocity does not go negative
         if velnew < 0:
+
             # Calculate time to stop
-            if abs(acc_new) > 1e-6:  # Avoid division by zero
+            if abs(acc_new) > 1e-6:
                 t_stop = -self.vel[-1] / acc_new
             else:
                 t_stop = 0
@@ -95,10 +96,6 @@ class VehicleClass:
             # Update position and velocity to stop at t_stop
             posnew = self.pos[-1] + self.vel[-1] * t_stop + 0.5 * acc_new * t_stop**2
             velnew = 0
-
-        # Ensure posnew is valid
-        if not np.isfinite(posnew):
-            posnew = self.pos[-1]
 
         self.pos.append(posnew % L)
         self.vel.append(velnew)

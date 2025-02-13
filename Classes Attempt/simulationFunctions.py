@@ -14,7 +14,9 @@ def init_simulation(N, L):
     min_gap = [2] * N
     accexp = 4
     desSpeed = 30
+    pos = np.zeros(N)
 
+    '''
     # Generate random positions for cars while maintaining the minimum gap
     pos = np.sort(np.random.uniform(0, L, N))
 
@@ -26,6 +28,11 @@ def init_simulation(N, L):
     # Wrap around the last car to ensure it doesn't overlap with the first car
     if (pos[-1] + min_gap[-1] + length[0]) % L < pos[0]:
         pos[-1] = (pos[0] - min_gap[-1] - length[0]) % L
+    '''
+
+    # Calculate initial positions with min_gap
+    for i in range(N):
+        pos[i] = i * (length[i] + min_gap[i])
 
     # Calculate headway
     for i in range(N):
@@ -55,7 +62,6 @@ def flow_global(N, velnew, L):
 
 def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light):
 
-    cars_with_phantom = cars
     '''
     # Update the traffic light state
     traffic_light.update(time_step)
@@ -70,41 +76,40 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
     else:
         cars_with_phantom = cars
     '''
-
-    posnew = np.zeros(N)
     velnew = np.zeros(N)
     den = 0
     flo = 0
 
     # Update positions and velocities for all cars (including the phantom car)
-    for i, car in enumerate(cars_with_phantom):
-        if car.car_id != -1:
-            car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
+    for i, car in enumerate(cars):
+        car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
 
     # Update headway and velocity differences using the cars_with_phantom list
-    cars_with_phantom = vc.update_cars(cars_with_phantom, N, L)
+    cars = vc.update_cars(cars, N, L)
+
     '''
     # Remove the phantom car from the list before further processing
     if phantom_car is not None:
         cars_with_phantom = cars_with_phantom[:-1]
     '''
+
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
-        den, flo = flow_global(N, velnew[:N], L)
+        den, flo = flow_global(N, velnew, L)
 
         # Detection loop for local measurements
-        for i, car in enumerate(cars_with_phantom):
-            if (car.pos[-2] < det_point <= posnew[-1]) or (car.pos[-2] < det_point <= posnew[-1] + L):
+        for i, car in enumerate(cars):
+            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-2] < det_point <= car.pos[-1] + L):
 
                 s = det_point - car.pos[-2]
 
                 # Check if acceleration is significant
-                if abs(car.acc[-2]) > 1e-6:
-                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-2] * s
+                if abs(car.acc[-1]) > 1e-6:
+                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-1] * s
                     
                     # Ensure the sqrt term is non-negative
                     if sqrt_term >= 0:
-                        delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-2]
+                        delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
                     else:
                         delta_t = 0
                 else:
@@ -112,11 +117,11 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-2] + car.acc[-2] * delta_t
+                detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
                 
     #cars = vc.update_cars(cars, N, L)
 
-    return cars_with_phantom, den, flo, detect_time, detect_vel
+    return cars, den, flo, detect_time, detect_vel
 
 
 
