@@ -27,7 +27,7 @@ class VehicleClass:
         self.comf_decel = comf_decel
         self.acc_max = acc_max
         self.length = length
-
+    
     def get_local_speed_limit(self, speed_limit_zones):
 
         for zone_start, speed_limit in speed_limit_zones:

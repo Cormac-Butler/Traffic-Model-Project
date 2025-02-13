@@ -1,5 +1,5 @@
 import numpy as np
-from VehicleClass import VehicleClass as vc
+from VechicleClass import VehicleClass as vc
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -15,7 +15,7 @@ def init_simulation(N, L):
     accexp = 4
     desSpeed = 30
     pos = np.zeros(N)
-
+    
     #'''
     pos = np.linspace(0, L - 10, N, endpoint=False)
 
@@ -63,7 +63,7 @@ def flow_global(N, velnew, L):
 
 
 
-def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light):
+def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step):
 
     velnew = np.zeros(N)
     posnew = np.zeros(N)
@@ -72,7 +72,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
     # Update positions and velocities
     cars, velnew, posnew = vc.upd_pos_vel(cars, time_step)
-
+    
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
         den, flo = flow_global(N, velnew, L)
@@ -140,10 +140,10 @@ def analyse_local(track_det_time, track_det_vel):
         loc_dens = 0
 
     return loc_flow, loc_dens
-    
-    
 
-def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, speed_limit_zones, traffic_light):
+
+
+def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
 
     track_flow = []
     track_dens = []
@@ -159,7 +159,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, speed_limit_z
         time_pass = i * time_step
 
         if time_pass > steps_measure * time_step:
-            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light)
+            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step)
 
             track_flow.append(flo)
             track_dens.append(den)
@@ -167,11 +167,11 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, speed_limit_z
             track_det_time.extend(detect_time)
             track_det_vel.extend(detect_vel)
         else:
-            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step, speed_limit_zones, traffic_light)
+            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel)
 
     print('Simulation for car total', N, 'completed')
 
-    return glob_flow, glob_dens, loc_flow, loc_dens
+    return cars, glob_flow, glob_dens, loc_flow, loc_dens
