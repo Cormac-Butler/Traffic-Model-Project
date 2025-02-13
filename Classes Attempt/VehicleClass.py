@@ -98,7 +98,7 @@ class VehicleClass:
 
         return cars, velnew, posnew
 
-    def update_cars(cars, N, L, velnew, posnew):
+    def update_cars(cars, N, L, posnew, velnew):
 
         # Update position and velocity
         for i, car in enumerate(cars):

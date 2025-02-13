@@ -17,7 +17,7 @@ def init_simulation(N, L):
     desSpeed = 30
     pos = np.zeros(N)
 
-    '''
+    #'''
     # Generate random positions for cars while maintaining the minimum gap
     pos = np.sort(np.random.uniform(0, L, N))
 
@@ -34,7 +34,7 @@ def init_simulation(N, L):
     # Calculate initial positions with min_gap
     for i in range(N):
         pos[i] = i * (length[i] + min_gap[i])
-
+    '''
     # Calculate headway
     for i in range(N):
         next_car = (i + 1) % N
