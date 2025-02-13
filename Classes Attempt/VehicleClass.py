@@ -60,49 +60,50 @@ class VehicleClass:
         else:
             self.des_speed = self.speedlim
             self.des_speed_inv = 1.0 / self.speedlim if self.speedlim > 0 else float('inf')
+    
+    def upd_pos_vel(cars, time_step):
 
-    def upd_pos_vel(self, L, time_step, speed_limit_zones, traffic_light):
+        posnew = np.zeros(len(cars))
+        velnew = np.zeros(len(cars))
+        acc_new = np.zeros(len(cars))
 
-        # Get the local speed limit based on the car's current position
-        #self.get_local_speed_limit(speed_limit_zones)
+        for i, car in enumerate(cars):
 
-        # Get the local speed limit based on the car's current position
-        #self.get_traffic_light_speed_limit(traffic_light, L)
+            # Calculate desired bumper-to-bumper distance (s*)
+            s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
 
-        # Calculate desired bumper-to-bumper distance (s*)
-        s_star = self.min_gap + max(0, self.vel[-1] * self.time_gap + (self.vel[-1] * self.dv[-1]) / (2 * (self.acc_max * self.comf_decel)**0.5))
+            # Calculate acceleration using IDM
+            acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / car.headway[-1])**2)
 
-        # Calculate acceleration using IDM
-        acc_new = self.acc_max * (1 - (self.vel[-1] * self.des_speed_inv)**self.acc_exp - (s_star / self.headway[-1])**2)
-        self.acc.append(acc_new)
+        for i, car in enumerate(cars):
 
-        # Update velocity and position
-        velnew = self.vel[-1] + acc_new * time_step
-        posnew = self.pos[-1] + self.vel[-1] * time_step + 0.5 * acc_new * time_step**2
+            # Update velocity and position
+            velnew[i] = car.vel[-1] + acc_new[i] * time_step
+            posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
-        # Ensure velocity does not go negative
-        if velnew < 0:
+            # Ensure velocity does not go negative
+            if velnew[i] < 0:
 
-            # Calculate time to stop
-            if abs(acc_new) > 1e-6:
-                t_stop = -self.vel[-1] / acc_new
-            else:
-                t_stop = 0
+                # Calculate time to stop
+                if abs(acc_new[i]) > 1e-6:
+                    t_stop = -car.vel[-1] / acc_new[i]
+                else:
+                    t_stop = 0
 
-            # Ensure t_stop is valid
-            if not np.isfinite(t_stop):
-                t_stop = 0
+                # Update position and velocity to stop at t_stop
+                posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
+                velnew[i] = 0
 
-            # Update position and velocity to stop at t_stop
-            posnew = self.pos[-1] + self.vel[-1] * t_stop + 0.5 * acc_new * t_stop**2
-            velnew = 0
+            car.acc.append(acc_new[i])
 
-        self.pos.append(posnew % L)
-        self.vel.append(velnew)
+        return cars, velnew, posnew
 
-        return self, velnew
+    def update_cars(cars, N, L, velnew, posnew):
 
-    def update_cars(cars, N, L):
+        # Update position and velocity
+        for i, car in enumerate(cars):
+            car.vel.append(velnew[i])
+            car.pos.append(posnew[i] % L)
 
         # Update headway and velocity difference
         for i, car in enumerate(cars):
@@ -111,7 +112,11 @@ class VehicleClass:
             next_car = cars[(i + 1) % N]
 
             # Calculate headway (front bumper to front bumper)
-            car.headway.append((next_car.pos[-1] - car.pos[-1]) % L)
+
+            if next_car.pos[-1] > car.pos[-1]:
+                car.headway.append(next_car.pos[-1] - car.pos[-1])
+            else:
+                car.headway.append((next_car.pos[-1] + L - car.pos[-1]))
 
             # Ensure the minimum gap is maintained
             if car.headway[-1] < (car.min_gap + next_car.length):

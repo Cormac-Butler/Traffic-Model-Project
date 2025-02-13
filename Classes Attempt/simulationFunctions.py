@@ -1,5 +1,6 @@
 import numpy as np
 from VehicleClass import VehicleClass as vc
+import math
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -62,36 +63,13 @@ def flow_global(N, velnew, L):
 
 def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, speed_limit_zones, traffic_light):
 
-    '''
-    # Update the traffic light state
-    traffic_light.update(time_step)
-
-    # Get the phantom car (if the light is red)
-    phantom_car = traffic_light.get_phantom_car()
-
-    # Add the phantom car to the list of cars (if it exists)
-    if phantom_car is not None:
-        cars_with_phantom = cars + [phantom_car]
-        N += 1 
-    else:
-        cars_with_phantom = cars
-    '''
     velnew = np.zeros(N)
+    posnew = np.zeros(N)
     den = 0
-    flo = 0
+    flo = 0 
 
-    # Update positions and velocities for all cars (including the phantom car)
-    for i, car in enumerate(cars):
-        car, velnew[i] = car.upd_pos_vel(L, time_step, speed_limit_zones, traffic_light)
-
-    # Update headway and velocity differences using the cars_with_phantom list
-    cars = vc.update_cars(cars, N, L)
-
-    '''
-    # Remove the phantom car from the list before further processing
-    if phantom_car is not None:
-        cars_with_phantom = cars_with_phantom[:-1]
-    '''
+    # Update positions and velocities
+    cars, velnew, posnew = vc.upd_pos_vel(cars, time_step)
 
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
@@ -99,27 +77,28 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-2] < det_point <= car.pos[-1] + L):
+            if (car.pos[-1] < det_point <= posnew[i]) or (car.pos[-1] < det_point <= posnew[i] + L):
 
-                s = det_point - car.pos[-2]
+                s = det_point - car.pos[-1]
 
                 # Check if acceleration is significant
                 if abs(car.acc[-1]) > 1e-6:
-                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-1] * s
+                    sqrt_term = car.vel[-1]**2 + 2 * car.acc[-1] * s
                     
                     # Ensure the sqrt term is non-negative
                     if sqrt_term >= 0:
-                        delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
+                        delta_t = (-car.vel[-1] + np.sqrt(sqrt_term)) / car.acc[-1]
                     else:
                         delta_t = 0
                 else:
-                    delta_t = s / car.vel[-2] if car.vel[-2] > 0 else 0 
+                    delta_t = s / car.vel[-1] if car.vel[-1] > 0 else 0 
                 
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
-                
-    #cars = vc.update_cars(cars, N, L)
+                detect_vel[i] = car.vel[-1] + car.acc[-1] * delta_t
+
+    # Update variables
+    cars = vc.update_cars(cars, N, L, posnew, velnew)
 
     return cars, den, flo, detect_time, detect_vel
 
@@ -136,29 +115,31 @@ def analyse_global(track_flow, track_dens):
 
 
 def analyse_local(track_det_time, track_det_vel):
+
+    # Avoid division by zero if no detection data
+    if not track_det_time or not track_det_vel:
+        return 0, 0 
+
+    # Calculate local flow (cars per hour)
+    num_cars = len(track_det_time)
+    total_time = track_det_time[-1] - track_det_time[0]
     
-    # No data yet
-    if len(track_det_time) == 0 or len(track_det_vel) == 0:
-        return 0, 0  
-    
-    # Define time window for local measurements
-    time_window = max(track_det_time) - min(track_det_time)
+    if total_time > 0:
+        loc_flow = (num_cars / total_time) * 3600
+    else:
+        loc_flow = 0
 
-    if time_window == 0:
-        return 0, 0  
+    # Calculate local density (cars per km)
+    avg_speed = sum(track_det_vel) / num_cars if num_cars > 0 else 0 
 
-    # Local flow: Number of cars passing the detection point per unit time (cars/hour)
-    loc_flow = len(track_det_time) / time_window * 3600  
-
-    # Local density: Using the fundamental equation (cars/km)
-    avg_velocity = np.mean(track_det_vel)
-    if avg_velocity == 0:
-        return loc_flow, 0 
-
-    loc_dens = loc_flow / (avg_velocity * 3.6)
+    if avg_speed > 0:
+        loc_dens = loc_flow / (avg_speed * 3.6)
+    else:
+        loc_dens = 0
 
     return loc_flow, loc_dens
-
+    
+    
 
 def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, speed_limit_zones, traffic_light):
 
