@@ -31,7 +31,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 
     # Return only the values that are needed
     return N, cars, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
-
+'''
 def update(cars, frame, scatters, texts):
 
     # Extract positions and velocities
@@ -58,15 +58,14 @@ def update(cars, frame, scatters, texts):
 
 def update_with_cars(frame):
     return update(cars, frame, scatters, texts)
-
-
+'''
 
 if __name__ == "__main__":
     
     # Model parameters
     max_cars = 50
-    road_length = 100000
-    steps = 1000  
+    road_length = 300
+    steps = 10000  
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     speed_limit_zones = [(0, 30), (1000, 20), (2000, 30), (4000, 5), (6000, 20), (8000, 30)]
 
     # Define traffic light parameters
-    traffic_light = tl(2000, 30, 5, 30)
+    #traffic_light = tl(2000, 30, 5, 30)
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -106,6 +105,7 @@ if __name__ == "__main__":
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
 
+    '''
     # Create the figure and axis
     fig, ax = plt.subplots(figsize=(10, 2))
 
@@ -124,9 +124,10 @@ if __name__ == "__main__":
 
     # Show the animation
     plt.show()
-
-
     '''
+
+
+    #'''
     # Plot global flow vs. global density
     plt.figure()
     plt.plot(global_density, global_flow, 'bo-', label='Global Flow')
@@ -171,8 +172,8 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
     plt.show()
+    #'''
     '''
-
     # Create a figure with multiple subplots
     fig, axes = plt.subplots(3, 2, figsize=(12, 12))
 
@@ -189,3 +190,4 @@ if __name__ == "__main__":
     # Adjust layout and show all plots in one window
     plt.tight_layout()
     plt.show()
+    '''

@@ -1,10 +1,9 @@
 import numpy as np
-from VechicleClass import VehicleClass as vc
+from VehicleClass import VehicleClass as vc
 
 def init_simulation(N, L):
     np.random.seed(20)
     cars = []
-
     lane = 0
     vel = [0]
     acc = [0]
@@ -13,7 +12,7 @@ def init_simulation(N, L):
     length = [3] *  N
     min_gap = [2] * N
     accexp = 4
-    desSpeed = 30
+    desSpeed = 30 #np.random.uniform(20,33,N)
     pos = np.zeros(N)
     
     #'''
@@ -57,7 +56,7 @@ def flow_global(N, velnew, L):
     dens = N / (L / 1000)
 
     # Calculate global flow (cars per hour)
-    flow = np.mean(velnew) * dens * 3600 / 1000
+    flow = np.mean(velnew) * dens * (3600 / 1000)
 
     return dens, flow
 
@@ -79,7 +78,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if (car.pos[-1] < det_point <= posnew[i]) or (car.pos[-1] < det_point <= posnew[i] + L):
+            if (car.pos[-1] < det_point <= posnew[i]):# or (car.pos[-1] < det_point <= posnew[i] + L):
 
                 s = det_point - car.pos[-1]
 
@@ -115,29 +114,28 @@ def analyse_global(track_flow, track_dens):
     return glob_flow, glob_dens
 
 
-
-def analyse_local(track_det_time, track_det_vel):
+#An alternative extension is the analysis of the model in terms of local densities and local flows. Measurements of flow and density 
+# normally take place locally. At a detection point, the time at which a vehicle passes the detection point is measured, as well as 
+# its velocity. 
+# 
+# Traffic flow is then measured by the number of cars that pass the point within a given time frame. The density is 
+# then deduced by dividing the traffic flow by the average velocity of the traffic. Such a measurement gives rise to a local density
+#  and a local flow. One possible follow-on question is thus how the local flow and local density compare to the global parameters
+def analyse_local(track_det_time, track_det_vel, time):
 
     # Avoid division by zero if no detection data
     if not track_det_time or not track_det_vel:
         return 0, 0 
-
-    # Calculate local flow (cars per hour)
-    num_cars = len(track_det_time)
-    total_time = track_det_time[-1] - track_det_time[0]
     
-    if total_time > 0:
-        loc_flow = (num_cars / total_time) * 3600
-    else:
-        loc_flow = 0
+    num_cars = len(track_det_time)
 
-    # Calculate local density (cars per km)
-    avg_speed = sum(track_det_vel) / num_cars if num_cars > 0 else 0 
+    # Calculate local flow
+    loc_flow = (num_cars / time) * 3600
 
-    if avg_speed > 0:
-        loc_dens = loc_flow / (avg_speed * 3.6)
-    else:
-        loc_dens = 0
+    # Calculate local density
+    avg_speed = sum(track_det_vel) / num_cars
+
+    loc_dens = loc_flow / (avg_speed * 3.6)
 
     return loc_flow, loc_dens
 
@@ -170,7 +168,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
             cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
-    loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel)
+    loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)
 
     print('Simulation for car total', N, 'completed')
 
