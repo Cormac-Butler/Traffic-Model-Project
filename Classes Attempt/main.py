@@ -4,6 +4,8 @@ import multiprocessing as mp
 import statsmodels.api as sm
 import matplotlib.animation as animation
 import matplotlib.cm as cm
+import TrafficVisualization as tv
+import numpy as np
 
 def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.scatter(x, y, color='black', marker='x', label='Data Points', alpha=0.25)
@@ -105,6 +107,8 @@ if __name__ == "__main__":
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
 
+    # Create visualisation
+    tv.TrafficVisualization(cars, road_length * 5, road_length * 5 / (2 * np.pi), 5, 1)
     '''
     # Create the figure and axis
     fig, ax = plt.subplots(figsize=(10, 2))
