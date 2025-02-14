@@ -108,7 +108,7 @@ if __name__ == "__main__":
         cars = carsMaxN
 
     # Create visualisation
-    tv.TrafficVisualization(cars, road_length * 5, road_length * 5 / (2 * np.pi), 5, 1)
+    tv.TrafficVisualization(cars, road_length, road_length / (2 * np.pi), 5, 250, 5)
     '''
     # Create the figure and axis
     fig, ax = plt.subplots(figsize=(10, 2))
