@@ -15,7 +15,7 @@ def init_simulation(N, L):
     desSpeed = 30 #np.random.uniform(20,33,N)
     pos = np.zeros(N)
     
-    #'''
+    '''
     pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
@@ -29,12 +29,12 @@ def init_simulation(N, L):
         elif pos[j] + L > pos[i]:
             if (pos[j] + L - pos[i]) < min_gap[i] + length[j]:
                 pos[j] = (pos[i] + min_gap[i] + length[j]) % L
-    #'''
+    
     '''
     # Calculate initial positions with min_gap
     for i in range(N):
         pos[i] = i * (length[i] + min_gap[i])
-    '''
+    #'''
 
     # Calculate headway
     for i in range(N):
