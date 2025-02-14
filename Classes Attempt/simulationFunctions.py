@@ -78,7 +78,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if (car.pos[-1] < det_point <= posnew[i]):# or (car.pos[-1] < det_point <= posnew[i] + L):
+            if (car.pos[-1] < det_point <= posnew[i]) or (posnew[i] < car.pos[-1] and car.pos[-1] < det_point <= posnew[i] + L):
 
                 s = det_point - car.pos[-1]
 
