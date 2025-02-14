@@ -33,34 +33,6 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 
     # Return only the values that are needed
     return N, cars, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
-'''
-def update(cars, frame, scatters, texts):
-
-    # Extract positions and velocities
-    x_positions = [car.pos[frame] for car in cars]
-    velocities = [car.vel[frame] for car in cars]
-
-    # Create a colormap
-    colormap = cm.viridis
-    num_cars = len(cars)
-
-    # Update positions and velocities for all cars
-    for i in range(num_cars):
-        color = colormap(i / num_cars)
-
-        # Update car position (scatter)
-        scatters[i].set_offsets([x_positions[i], 0])
-        scatters[i].set_facecolor(color)
-
-        # Update the velocity text
-        texts[i].set_position([x_positions[i], 1.5])
-        texts[i].set_text(f'{velocities[i]:.1f}')
-
-    return scatters + texts
-
-def update_with_cars(frame):
-    return update(cars, frame, scatters, texts)
-'''
 
 if __name__ == "__main__":
     
@@ -108,75 +80,57 @@ if __name__ == "__main__":
         cars = carsMaxN
 
     # Create visualisation
-    tv.TrafficVisualization(cars, road_length, road_length / (2 * np.pi), 5, 250, 5)
-    '''
-    # Create the figure and axis
-    fig, ax = plt.subplots(figsize=(10, 2))
+    #tv.TrafficVisualization(cars, road_length, road_length / (2 * np.pi), 5, 250, 5)
 
-    # Initialise scatters and texts
-    scatters = [ax.scatter([], [], s=20) for _ in range(len(cars))]
-    texts = [ax.text(0, 1.5, '', fontsize=6, ha='center', color='black') for _ in range(len(cars))]
+    # Create a 2x3 figure layout
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
-    # Set axis limits
-    ax.set_xlim(0, road_length)
-    ax.set_ylim(-5, 10)
-    ax.set_xlabel("Road Position (m)")
-    ax.set_title("Traffic Simulation (IDM Model)")
+    # Plot 1: Global Flow vs. Global Density
+    axes[0, 0].plot(global_density, global_flow, 'bo-', label='Global Flow')
+    axes[0, 0].set_xlabel('Density (cars/km)')
+    axes[0, 0].set_ylabel('Flow (cars/hour)')
+    axes[0, 0].legend()
+    axes[0, 0].grid()
 
-    # Create the animation
-    ani = animation.FuncAnimation(fig, update_with_cars, frames=steps, interval=10, blit=True)
+    # Plot 2: Local Flow vs. Local Density
+    axes[0, 1].plot(local_density, local_flow, 'ro-', label='Local Flow')
+    axes[0, 1].set_xlabel('Density (cars/km)')
+    axes[0, 1].set_ylabel('Flow (cars/hour)')
+    axes[0, 1].legend()
+    axes[0, 1].grid()
 
-    # Show the animation
-    plt.show()
-    '''
+    # Plot 3: Global Avg Velocity vs. Density
+    axes[0, 2].plot(global_density, global_average_velocity, 'bo-', label='Global Avg Velocity')
+    axes[0, 2].set_xlabel('Density (cars/km)')
+    axes[0, 2].set_ylabel('Average Velocity (m/s)')
+    axes[0, 2].legend()
+    axes[0, 2].grid()
 
+    # Plot 4: Local Avg Velocity vs. Density
+    axes[1, 0].plot(local_density, local_average_velocity, 'ro-', label='Local Avg Velocity')
+    axes[1, 0].set_xlabel('Density (cars/km)')
+    axes[1, 0].set_ylabel('Average Velocity (m/s)')
+    axes[1, 0].legend()
+    axes[1, 0].grid()
 
-    #'''
-    # Plot global flow vs. global density
-    plt.figure()
-    plt.plot(global_density, global_flow, 'bo-', label='Global Flow')
-    plt.xlabel('Density (cars/km)')
-    plt.ylabel('Flow (cars/hour)')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    # Plot 5: Global Flow vs. Global Velocity
+    axes[1, 1].plot(global_flow, global_average_velocity, 'bo-', label='Global Flow')
+    axes[1, 1].set_xlabel('Flow (cars/hour)')
+    axes[1, 1].set_ylabel('Average Velocity (m/s)')
+    axes[1, 1].legend()
+    axes[1, 1].grid()
 
-    # Plot flow vs. velocity
-    plt.figure()
-    plt.plot(global_flow, global_average_velocity, 'bo-', label='Global Flow')
-    plt.xlabel('Flow (cars/hour)')
-    plt.ylabel('Average Velocity (m/s)')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    # Plot 6: Local Flow vs. Local Velocity
+    axes[1, 2].plot(local_flow, local_average_velocity, 'ro-', label='Local Flow')
+    axes[1, 2].set_xlabel('Flow (cars/hour)')
+    axes[1, 2].set_ylabel('Average Velocity (m/s)')
+    axes[1, 2].legend()
+    axes[1, 2].grid()
 
-    # Plot local flow vs. local density
-    plt.figure()
-    plt.plot(local_density, local_flow, 'ro-', label='Local Flow')
-    plt.xlabel('Density (cars/km)')
-    plt.ylabel('Flow (cars/hour)')
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    # Plot average velocity vs. density (global)
-    plt.figure()
-    plt.plot(global_density, global_average_velocity, 'bo-', label='Global Average Velocity')
-    plt.xlabel('Density (cars/km)')
-    plt.ylabel('Average Velocity (m/s)')
-    plt.legend()
-    plt.grid()
+    # Adjust layout to prevent overlap
+    plt.tight_layout()
     plt.show()
 
-    # Plot average velocity vs. density (local)
-    plt.figure()
-    plt.plot(local_density, local_average_velocity, 'ro-', label='Local Average Velocity')
-    plt.xlabel('Density (cars/km)')
-    plt.ylabel('Average Velocity (m/s)')
-    plt.legend()
-    plt.grid()
-    plt.show()
-    #'''
     '''
     # Create a figure with multiple subplots
     fig, axes = plt.subplots(3, 2, figsize=(12, 12))

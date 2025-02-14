@@ -12,20 +12,26 @@ def init_simulation(N, L):
     length = [3] *  N
     min_gap = [2] * N
     accexp = 4
-    desSpeed = 30 #np.random.uniform(20,33,N)
+    desSpeed = 30
     pos = np.zeros(N)
-    
-    '''
-    pos = np.linspace(0, L - 10, N, endpoint=False)
+
+    # Calculate initial positions with min_gap
+    for i in range(N):
+        pos[i] = i * (length[i] + min_gap[i])
+    #pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
-    while any((pos[(i + 1) % N] - pos[i] + (L if pos[(i + 1) % N] < pos[i] else 0)) < (min_gap[i] + length[(i + 1) % N]) for i in range(N)):
-        
+    while True:
+
+        changes = False
+
         # Loop backward to adjust positions
         for i in range(N - 1, -1, -1):
             
             # Next car index
             j = (i + 1) % N 
+
+            min_safe_gap = min_gap[i] + length[j]
 
             # Compute headway
             if pos[j] > pos[i]:
@@ -34,18 +40,15 @@ def init_simulation(N, L):
                 headway = (pos[j] + L - pos[i])
 
             # Ensure minimum gap is maintained
-            min_safe_gap = min_gap[i] + length[j]
-
             if headway < min_safe_gap:
-            
+                
+                changes = True
+
                 # Move the car back to maintain the minimum gap
                 pos[i] = (pos[j] - min_safe_gap) % L
-    
-    '''
-    # Calculate initial positions with min_gap
-    for i in range(N):
-        pos[i] = i * (length[i] + min_gap[i])
-    #'''
+        
+        if not changes:
+            break
 
     # Calculate headway
     for i in range(N):
@@ -75,16 +78,14 @@ def flow_global(N, velnew, L):
 
 def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step):
 
-    velnew = np.zeros(N)
-    posnew = np.zeros(N)
     den = 0
     flo = 0 
 
     # Update positions and velocities
-    cars, velnew, posnew = vc.upd_pos_vel(cars, time_step)
+    cars = vc.upd_pos_vel(cars, time_step, L)
     
     # Update variables
-    cars = vc.update_cars(cars, N, L, posnew, velnew, time_step)
+    cars = vc.update_cars(cars, N, L, time_step)
     
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
@@ -125,13 +126,7 @@ def analyse_global(track_flow, track_dens):
     return glob_flow, glob_dens
 
 
-#An alternative extension is the analysis of the model in terms of local densities and local flows. Measurements of flow and density 
-# normally take place locally. At a detection point, the time at which a vehicle passes the detection point is measured, as well as 
-# its velocity. 
-# 
-# Traffic flow is then measured by the number of cars that pass the point within a given time frame. The density is 
-# then deduced by dividing the traffic flow by the average velocity of the traffic. Such a measurement gives rise to a local density
-#  and a local flow. One possible follow-on question is thus how the local flow and local density compare to the global parameters
+
 def analyse_local(track_det_time, track_det_vel, time):
 
     # Avoid division by zero if no detection data

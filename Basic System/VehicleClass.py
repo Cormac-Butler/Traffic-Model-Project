@@ -28,40 +28,7 @@ class VehicleClass:
         self.acc_max = acc_max
         self.length = length
     
-    def get_local_speed_limit(self, speed_limit_zones):
-
-        for zone_start, speed_limit in speed_limit_zones:
-            if self.pos[-1] >= zone_start:
-                self.speedlim = speed_limit
-                self.des_speed = speed_limit
-                self.des_speed_inv = 1.0 / speed_limit
-
-        return self.des_speed
-    
-    def get_traffic_light_speed_limit(self, traffic_light, L):
-
-        distance_to_light = (traffic_light.position - self.pos[-1]) % L
-
-        if traffic_light.state == "red":
-            self.des_speed = 0
-            self.des_speed_inv = float('inf')
-        elif traffic_light.state == "orange":
-            if self.vel[-1] > 0:
-                time_to_light = distance_to_light / self.vel[-1]
-            else:
-                time_to_light = float('inf')
-
-            if time_to_light > traffic_light.orange_duration:
-                self.des_speed = 0
-                self.des_speed_inv = float('inf')
-            else:
-                self.des_speed = self.speedlim
-                self.des_speed_inv = 1.0 / self.speedlim if self.speedlim > 0 else float('inf')
-        else:
-            self.des_speed = self.speedlim
-            self.des_speed_inv = 1.0 / self.speedlim if self.speedlim > 0 else float('inf')
-    
-    def upd_pos_vel(cars, time_step):
+    def upd_pos_vel(cars, time_step, L):
 
         posnew = np.zeros(len(cars))
         velnew = np.zeros(len(cars))
@@ -93,17 +60,16 @@ class VehicleClass:
                 # Update position and velocity to stop at t_stop
                 posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
                 velnew[i] = 0
-
-            car.acc.append(acc_new[i])
-
-        return cars, velnew, posnew
-
-    def update_cars(cars, N, L, posnew, velnew, time_step):
-
+        
         # Set new position and velocity values
         for i, car in enumerate(cars):
+            car.acc.append(acc_new[i])
             car.pos.append(posnew[i] % L)
             car.vel.append(velnew[i])
+
+        return cars
+
+    def update_cars(cars, N, L, time_step):
 
         while True:
             changes = False
@@ -138,10 +104,6 @@ class VehicleClass:
 
                     car.acc[-1] = 2 * (displacement - car.vel[-2] * time_step) / time_step**2
                     car.vel[-1] = 2 * displacement / time_step - car.vel[-2]
-
-                    # Update position and velocity
-                    posnew[i] = car.pos[-1]
-                    velnew[i] = car.vel[-1]
             
             if not changes:
                 break
