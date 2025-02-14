@@ -19,16 +19,27 @@ def init_simulation(N, L):
     pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
-    for i in range(0, N):
-        i = i % N
-        j = (i + 1) % N
- 
-        if pos[j] > pos[i]:
-            if (pos[j] - pos[i]) < min_gap[i] + length[j]:
-                pos[j] = (pos[i] + min_gap[i] + length[j]) % L
-        elif pos[j] + L > pos[i]:
-            if (pos[j] + L - pos[i]) < min_gap[i] + length[j]:
-                pos[j] = (pos[i] + min_gap[i] + length[j]) % L
+    while any((pos[(i + 1) % N] - pos[i] + (L if pos[(i + 1) % N] < pos[i] else 0)) < (min_gap[i] + length[(i + 1) % N]) for i in range(N)):
+        
+        # Loop backward to adjust positions
+        for i in range(N - 1, -1, -1):
+            
+            # Next car index
+            j = (i + 1) % N 
+
+            # Compute headway
+            if pos[j] > pos[i]:
+                headway = pos[j] - pos[i]
+            else:
+                headway = (pos[j] + L - pos[i])
+
+            # Ensure minimum gap is maintained
+            min_safe_gap = min_gap[i] + length[j]
+
+            if headway < min_safe_gap:
+            
+                # Move the car back to maintain the minimum gap
+                pos[i] = (pos[j] - min_safe_gap) % L
     
     '''
     # Calculate initial positions with min_gap
@@ -99,7 +110,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 detect_vel[i] = car.vel[-1] + car.acc[-1] * delta_t
 
     # Update variables
-    cars = vc.update_cars(cars, N, L, posnew, velnew)
+    cars = vc.update_cars(cars, N, L, posnew, velnew, time_step)
 
     return cars, den, flo, detect_time, detect_vel
 

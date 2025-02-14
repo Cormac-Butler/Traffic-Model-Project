@@ -97,8 +97,9 @@ class VehicleClass:
             car.acc.append(acc_new[i])
 
         return cars, velnew, posnew
-
-    def update_cars(cars, N, L, posnew, velnew):
+    
+    #'''
+    def update_cars(cars, N, L, posnew, velnew, dt):
 
         # Update position and velocity
         for i, car in enumerate(cars):
@@ -128,3 +129,47 @@ class VehicleClass:
             car.dv.append(next_car.vel[-1] - car.vel[-1])
         
         return cars
+    '''
+    def update_cars(cars, N, L, posnew, velnew):
+
+        # Set new position and velocity values
+        for i, car in enumerate(cars):
+            car.pos.append(posnew[i] % L)
+            car.vel.append(velnew[i])
+
+        # Keep adjusting positions and velocitiesnuntil all cars have a safe gap
+        while any((cars[(i + 1) % N].pos[-1] - cars[i].pos[-1] + (L if cars[(i + 1) % N].pos[-1] < cars[i].pos[-1] else 0)) < (cars[i].min_gap + cars[(i + 1) % N].length) for i in range(N)):
+            
+            # Loop backward to adjust positions for safety gaps
+            for i in range(N - 1, -1, -1):
+                car = cars[i]
+                next_car = cars[(i + 1) % N] 
+
+                # Compute headway
+                if next_car.pos[-1] > car.pos[-1]:
+                    headway = next_car.pos[-1] - car.pos[-1]
+                else:
+                    headway = (next_car.pos[-1] + L - car.pos[-1])
+
+                # Ensure minimum gap is maintained
+                min_safe_gap = car.min_gap + next_car.length
+
+                if headway < min_safe_gap:
+
+                    # Move the car back to maintain the minimum gap
+                    car.pos[-1] = (next_car.pos[-1] - min_safe_gap) % L
+
+                    # Compute corrected velocity based on adjusted displacement
+                    corrected_displacement = car.pos[-1] - car.pos[-2]
+
+                    if corrected_displacement < 0:
+                        corrected_displacement += L
+
+                    car.vel[-1] = np.sqrt(car.vel[-2]**2 + 2 * car.acc[-1] * corrected_displacement)
+
+                # Update headway and velocity difference
+                car.headway.append(next_car.pos[-1] - car.pos[-1] if next_car.pos[-1] > car.pos[-1] else (next_car.pos[-1] + L - car.pos[-1]))
+                car.dv.append(next_car.vel[-1] - car.vel[-1])
+        
+        return cars
+    '''
