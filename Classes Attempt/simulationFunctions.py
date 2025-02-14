@@ -83,34 +83,34 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
     # Update positions and velocities
     cars, velnew, posnew = vc.upd_pos_vel(cars, time_step)
     
+    # Update variables
+    cars = vc.update_cars(cars, N, L, posnew, velnew, time_step)
+    
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
-        den, flo = flow_global(N, velnew, L)
+        den, flo = flow_global(N, [car.vel[-1] for car in cars], L)
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if (car.pos[-1] < det_point <= posnew[i]) or (posnew[i] < car.pos[-1] and car.pos[-1] < det_point <= posnew[i] + L):
+            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L):
 
-                s = det_point - car.pos[-1]
+                s = det_point - car.pos[-2]
 
                 # Check if acceleration is significant
                 if abs(car.acc[-1]) > 1e-6:
-                    sqrt_term = car.vel[-1]**2 + 2 * car.acc[-1] * s
+                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-1] * s
                     
                     # Ensure the sqrt term is non-negative
                     if sqrt_term >= 0:
-                        delta_t = (-car.vel[-1] + np.sqrt(sqrt_term)) / car.acc[-1]
+                        delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
                     else:
                         delta_t = 0
                 else:
-                    delta_t = s / car.vel[-1] if car.vel[-1] > 0 else 0 
+                    delta_t = s / car.vel[-2] if car.vel[-2] > 0 else 0 
                 
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-1] + car.acc[-1] * delta_t
-
-    # Update variables
-    cars = vc.update_cars(cars, N, L, posnew, velnew, time_step)
+                detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
 
     return cars, den, flo, detect_time, detect_vel
 
