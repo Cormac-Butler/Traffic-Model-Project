@@ -17,7 +17,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 10
+    max_cars = 2
     road_length = 300
     steps = 1000  
     steps_before_measure = 100  
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define traffic light parameters
-    traffic_light = tl(100, 0, 0, 10000)
+    traffic_light = tl(100, 15, 5, 10)
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)

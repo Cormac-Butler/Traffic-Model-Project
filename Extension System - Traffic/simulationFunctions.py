@@ -74,20 +74,31 @@ def flow_global(N, velnew, L):
 
     return dens, flow
 
-def add_phantom_car(cars, traffic_light, L, time_pass):
-    light_status = traffic_light.status(time_pass)
-    phantom_car = None
+def add_phantom_car(cars, traffic_light):
 
-    if light_status == "red":
-        # Only add the phantom car if not already present
-        if not any(car.car_id == -1 for car in cars):
-            phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
-            cars.append(phantom_car)
+    # Create the phantom car
+    phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
 
-    return cars, phantom_car 
+    # Find the index to insert the phantom car without sorting
+    insert_index = None
+    for i in range(len(cars)):
+        if cars[i].pos[-1] >= traffic_light.position:
+            insert_index = i
+            break
+
+    # Insert the phantom car at the correct position
+    if insert_index is not None:
+        cars.insert(insert_index, phantom_car)
+    else:
+        cars.append(phantom_car) 
+
+    return cars
 
 def remove_phantom_car(cars):
+    
+    # Remove the phantom car
     cars = [car for car in cars if car.car_id != -1]
+
     return cars
 
 
@@ -101,21 +112,21 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
     light_status = traffic_light.status(time_pass)
     '''
     if light_status == "red":
-        cars, phantom_car = add_phantom_car(cars, traffic_light, L, time_pass)
-    else:
-        cars = remove_phantom_car(cars)
-        phantom_car = None
+        cars = add_phantom_car(cars, traffic_light)
     '''
     # Update positions and velocities
     cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status)
-    
+    '''
+    if light_status == "red":
+        cars = remove_phantom_car(cars)
+    '''
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
     
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
-        den, flo = flow_global(N, [car.vel[-1] for car in cars], L)
-
+        den, flo = flow_global(N, [car.vel[-1] for car in cars if car.car_id != -1], L)
+        '''
         # Detection loop for local measurements
         for i, car in enumerate(cars):
             if car.car_id != -1 and ((car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L)):
@@ -137,7 +148,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
                 detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
-
+        '''
     return cars, den, flo, detect_time, detect_vel
 
 
