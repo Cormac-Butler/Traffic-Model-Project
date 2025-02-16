@@ -66,8 +66,7 @@ class VehicleClass:
                 
         for i, car in enumerate(cars): 
             if car.car_id != -1:
-                if cars[0].pos[-1] == traffic_light.position:
-                    print('hi')
+                
                 # Handle stopping at red light
                 if light_status == 'red' and car.pos[-1] == traffic_light.position:
                     posnew[i] = car.pos[-1]
