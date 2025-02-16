@@ -22,10 +22,10 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length):
+def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length, speed_limit_zones):
     
     # Run simulation
-    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length, speed_limit_zones)
     
     # Compute average velocity (glob_avg_velocity, loc_avg_velocity)
     glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density != 0 else 0
@@ -37,9 +37,9 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 50
+    max_cars = 10
     road_length = 300
-    steps = 10000  
+    steps = 1000  
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  
@@ -50,10 +50,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define speed limit zones
-    speed_limit_zones = [(0, 30), (1000, 20), (2000, 30), (4000, 5), (6000, 20), (8000, 30)]
-
-    # Define traffic light parameters
-    #traffic_light = tl(2000, 30, 5, 30)
+    speed_limit_zones = [(0, 50, 30), (50, 100, 20), (100, 200, 30), (200, 250, 5), (250, 300, 20)]
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -61,7 +58,7 @@ if __name__ == "__main__":
 
     # Parallel processing using multiprocessing Pool
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length) for N in car_counts])
+        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length, speed_limit_zones) for N in car_counts])
 
     # Unpack results
     global_flow, local_flow = [], []

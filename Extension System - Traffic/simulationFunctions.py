@@ -74,15 +74,44 @@ def flow_global(N, velnew, L):
 
     return dens, flow
 
+def add_phantom_car(cars, traffic_light, L, time_pass):
+    light_status = traffic_light.status(time_pass)
+    phantom_car = None
+
+    if light_status == "red":
+        phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
+        cars.append(phantom_car)
+
+        # Make all cars treat the phantom car as an obstruction
+        for car in cars:
+            if car.car_id != -1 and (0 < (traffic_light.position - car.pos[-1]) % L < 10):
+                car.vel[-1] = 0
+                car.acc[-1] = 0
+
+    return cars, phantom_car
+
+def remove_phantom_car(cars):
+    cars = [car for car in cars if car.car_id != -1]
+    return cars
 
 
-def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step):
+
+def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, traffic_light):
 
     den = 0
     flo = 0 
 
+    # Get traffic light status
+    light_status = traffic_light.status(time_pass)
+
+    if light_status == "red":
+        cars, phantom_car = add_phantom_car(cars, traffic_light, L, time_pass)
+    else:
+        cars = remove_phantom_car(cars)
+        phantom_car = None
+
     # Update positions and velocities
-    cars = vc.upd_pos_vel(cars, time_step, L)
+    cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status)
     
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
@@ -93,7 +122,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
         # Detection loop for local measurements
         for i, car in enumerate(cars):
-            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L):
+            if car.car_id != -1 and ((car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L)):
 
                 s = det_point - car.pos[-2]
 
@@ -147,7 +176,7 @@ def analyse_local(track_det_time, track_det_vel, time):
 
 
 
-def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
+def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, traffic_light):
 
     track_flow = []
     track_dens = []
@@ -163,7 +192,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
         time_pass = i * time_step
 
         if time_pass > steps_measure * time_step:
-            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step)
+            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step, traffic_light)
 
             track_flow.append(flo)
             track_dens.append(den)
@@ -171,7 +200,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
             track_det_time.extend(detect_time)
             track_det_vel.extend(detect_vel)
         else:
-            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step)
+            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step, traffic_light)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)

@@ -28,46 +28,23 @@ class VehicleClass:
         self.acc_max = acc_max
         self.length = length
     
-    def get_local_speed_limit(self, speed_limit_zones):
-
-        for zone_start, speed_limit in speed_limit_zones:
-            if self.pos[-1] >= zone_start:
-                self.speedlim = speed_limit
-                self.des_speed = speed_limit
-                self.des_speed_inv = 1.0 / speed_limit
-
-        return self.des_speed
+    def get_speed_limit(self, speed_limit_zones):
+        for start, end, limit in speed_limit_zones:
+            if start <= self.pos[-1] < end:
+                self.speedlim = limit
+                self.des_speed = limit
+                self.des_speed_inv = 1.0 / limit
     
-    def get_traffic_light_speed_limit(self, traffic_light, L):
-
-        distance_to_light = (traffic_light.position - self.pos[-1]) % L
-
-        if traffic_light.state == "red":
-            self.des_speed = 0
-            self.des_speed_inv = float('inf')
-        elif traffic_light.state == "orange":
-            if self.vel[-1] > 0:
-                time_to_light = distance_to_light / self.vel[-1]
-            else:
-                time_to_light = float('inf')
-
-            if time_to_light > traffic_light.orange_duration:
-                self.des_speed = 0
-                self.des_speed_inv = float('inf')
-            else:
-                self.des_speed = self.speedlim
-                self.des_speed_inv = 1.0 / self.speedlim if self.speedlim > 0 else float('inf')
-        else:
-            self.des_speed = self.speedlim
-            self.des_speed_inv = 1.0 / self.speedlim if self.speedlim > 0 else float('inf')
-    
-    def upd_pos_vel(cars, time_step, L):
+    def upd_pos_vel(cars, time_step, L, speed_limit_zones):
 
         posnew = np.zeros(len(cars))
         velnew = np.zeros(len(cars))
         acc_new = np.zeros(len(cars))
 
         for i, car in enumerate(cars):
+            
+            # Calculate max velocity for zone
+            car.get_speed_limit(speed_limit_zones)
 
             # Calculate desired bumper-to-bumper distance (s*)
             s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
