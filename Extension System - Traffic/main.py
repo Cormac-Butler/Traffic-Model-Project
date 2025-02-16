@@ -51,7 +51,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define traffic light parameters
-    traffic_light = tl(100, 10, 3, 5)
+    traffic_light = tl(100, 0, 0, 10000)
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         cars = carsMaxN
 
     # Create visualisation
-    tv.TrafficVisualization(cars, road_length, road_length / (2 * np.pi), 5, 250, 5)
+    tv.TrafficVisualization(cars, road_length, road_length / (2 * np.pi), 5, 250, traffic_light, 5)
 
     # Create a 2x3 figure layout
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))

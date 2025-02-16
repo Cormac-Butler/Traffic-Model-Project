@@ -3,7 +3,7 @@ import random
 import math
 
 class TrafficVisualization:
-    def __init__(self, car_objects, road_length, road_radius, car_size, update_interval, scale_factor=5):
+    def __init__(self, car_objects, road_length, road_radius, car_size, update_interval, traffic_light, scale_factor=5):
         self.root = tk.Tk()
         self.root.title("Traffic Simulation")
 
@@ -20,12 +20,15 @@ class TrafficVisualization:
         self.road_length = road_length
         self.center = (self.road_radius + 50, self.road_radius + 50)
 
+        self.traffic_light = traffic_light
+
         self.canvas = tk.Canvas(self.root, width=2 * self.road_radius + 100, height=2 * self.road_radius + 100)
         self.canvas.pack()
 
         self.draw_road()
         self.cars = self.create_cars()
-        
+        self.traffic_light_circle = self.create_traffic_light()
+
         # Start animation
         self.smooth_update()
         self.root.mainloop()
@@ -53,6 +56,25 @@ class TrafficVisualization:
             cars.append(car)
         return cars
 
+    def create_traffic_light(self):
+        # Position of the traffic light on the circular road
+        pos = self.traffic_light.position / self.road_length
+        angle = 2 * math.pi * pos
+        x = self.center[0] + self.road_radius * math.cos(angle)
+        y = self.center[1] + self.road_radius * math.sin(angle)
+
+        # Create a circle for the traffic light
+        return self.canvas.create_oval(
+            x - 10, y - 10, x + 10, y + 10,
+            fill="red", outline="black"
+        )
+
+    def update_traffic_light(self, current_time):
+        colors = {"red": "red", "orange": "orange", "green": "green"}
+        light_color = self.traffic_light.status(current_time) 
+        self.canvas.itemconfig(self.traffic_light_circle, fill=colors[light_color])
+
+
     def get_car_color(self, index):
         random.seed(index)
         return f"#{random.randint(0, 255):02x}{random.randint(0, 255):02x}{random.randint(0, 255):02x}"
@@ -62,16 +84,15 @@ class TrafficVisualization:
             return
 
         next_step = self.current_step + 1
+        current_time = next_step * self.update_interval / 1000 
 
         for i, car in enumerate(self.cars):
-            # Check if next_step is within the bounds of the car's position list
             if next_step >= len(self.car_objects[i].pos):
-                continue  # Skip cars that don't have data for the next step
+                continue  
 
             pos_current = self.car_objects[i].pos[self.current_step] / self.road_length
             pos_next = self.car_objects[i].pos[next_step] / self.road_length
             
-            # Interpolation to prevent large jumps
             for j in range(1, self.interp_steps + 1):
                 interp_pos = pos_current + (pos_next - pos_current) * (j / self.interp_steps)
                 angle = 2 * math.pi * interp_pos
@@ -81,5 +102,6 @@ class TrafficVisualization:
                 self.canvas.coords(car, x - self.car_size, y - self.car_size, x + self.car_size, y + self.car_size)
                 self.root.update_idletasks()
 
+        self.update_traffic_light(current_time) 
         self.current_step += 1
         self.root.after(self.update_interval, self.smooth_update)

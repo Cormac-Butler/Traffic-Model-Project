@@ -79,16 +79,12 @@ def add_phantom_car(cars, traffic_light, L, time_pass):
     phantom_car = None
 
     if light_status == "red":
-        phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
-        cars.append(phantom_car)
+        # Only add the phantom car if not already present
+        if not any(car.car_id == -1 for car in cars):
+            phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
+            cars.append(phantom_car)
 
-        # Make all cars treat the phantom car as an obstruction
-        for car in cars:
-            if car.car_id != -1 and (0 < (traffic_light.position - car.pos[-1]) % L < 10):
-                car.vel[-1] = 0
-                car.acc[-1] = 0
-
-    return cars, phantom_car
+    return cars, phantom_car 
 
 def remove_phantom_car(cars):
     cars = [car for car in cars if car.car_id != -1]
@@ -103,13 +99,13 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
 
     # Get traffic light status
     light_status = traffic_light.status(time_pass)
-
+    '''
     if light_status == "red":
         cars, phantom_car = add_phantom_car(cars, traffic_light, L, time_pass)
     else:
         cars = remove_phantom_car(cars)
         phantom_car = None
-
+    '''
     # Update positions and velocities
     cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status)
     
