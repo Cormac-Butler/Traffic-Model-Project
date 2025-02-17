@@ -17,7 +17,7 @@ def init_simulation(N, L):
 
     # Calculate initial positions with min_gap
     for i in range(N):
-        pos[i] = (i+1) * (length[i] + min_gap[i])
+        pos[i] = (i) * (length[i] + min_gap[i])
     #pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained

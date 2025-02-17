@@ -38,7 +38,6 @@ class TrafficVisualization:
     def create_cars(self):
         cars = []
         for i, car_obj in enumerate(self.car_objects):
-            print(f"car_positions[{i}]: {car_obj}")
             pos = car_obj[0] / self.road_length
             angle = 2 * math.pi * pos
             x = self.center[0] + self.road_radius * math.cos(angle)
