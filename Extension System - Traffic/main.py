@@ -1,6 +1,7 @@
 import simulationFunctions as sf
 import multiprocessing as mp
 from TrafficLightClass import TrafficLightClass as tl
+import pickle
 
 def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length, traffic_light):
     
@@ -56,14 +57,19 @@ if __name__ == "__main__":
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
 
-    # Package the required values into a text file so we don't have to run the sim 6042 times 
-    with open('simulation_results_traffic_extension.txt', 'w') as file:
-        file.write(f"traffic_light: {traffic_light}\n")
-        file.write(f"cars_positions: {[car.pos for car in cars]}\n")
-        file.write(f"road_length: {road_length}\n")
-        file.write(f"global_density: {global_density}\n")
-        file.write(f"global_flow: {global_flow}\n")
-        file.write(f"local_density: {local_density}\n")
-        file.write(f"local_flow: {local_flow}\n")
-        file.write(f"global_average_velocity: {global_average_velocity}\n")
-        file.write(f"local_average_velocity: {local_average_velocity}\n")
+    # OrganiSe results into a dictionary
+    simulation_data = {
+        "traffic_light": traffic_light, 
+        "cars_positions": [[car.pos for car in res[1]] for res in results],
+        "road_length": road_length,
+        "global_density": [res[3] for res in results],
+        "global_flow": [res[2] for res in results],
+        "local_density": [res[5] for res in results],
+        "local_flow": [res[4] for res in results],
+        "global_average_velocity": [res[6] for res in results],
+        "local_average_velocity": [res[7] for res in results]
+    }
+
+    # Save to a pickle file
+    with open('simulation_results_traffic_extension.pkl', 'wb') as file:
+        pickle.dump(simulation_data, file)

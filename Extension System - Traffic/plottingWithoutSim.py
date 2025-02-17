@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import TrafficVisualization as tv
 import numpy as np
+import pickle
 
 def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.scatter(x, y, color='black', marker='x', label='Data Points', alpha=0.25)
@@ -18,16 +19,10 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-def extractFile(filename):
-
-    with open(filename, 'r') as file:
-        data = file.readlines()
-    
-    results = {}
-    for line in data:
-        key, value = line.strip().split(': ')
-        results[key] = eval(value)
-    
+def extractFile(file):
+    results = []
+    with open('simulation_results_traffic_extension.pkl', 'rb') as file:
+        results = pickle.load(file)
     return results
 
 # Extract results from the file

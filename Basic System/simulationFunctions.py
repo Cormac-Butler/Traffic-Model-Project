@@ -17,7 +17,7 @@ def init_simulation(N, L):
 
     # Calculate initial positions with min_gap
     for i in range(N):
-        pos[i] = i * (length[i] + min_gap[i])
+        pos[i] = (i+1) * (length[i] + min_gap[i])
     #pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
@@ -31,13 +31,15 @@ def init_simulation(N, L):
             # Next car index
             j = (i + 1) % N 
 
-            min_safe_gap = min_gap[i] + length[j]
+            min_safe_gap = min_gap[i]
 
             # Compute headway
-            if pos[j] > pos[i]:
-                headway = pos[j] - pos[i]
+            if pos[j] - length[j] > pos[i]:
+                headway = pos[j] - pos[i] - length[j]
+               
             else:
-                headway = (pos[j] + L - pos[i])
+                headway = (pos[j] - length[j] + L - pos[i])
+                
 
             # Ensure minimum gap is maintained
             if headway < min_safe_gap:
