@@ -16,17 +16,17 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 600
-    road_length = 3200
+    max_cars = 50
+    road_length = 300
     steps = 1000  
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  
     time_step = 0.5
 
-    start_cars = 100
+    start_cars = 2
     end_cars = max_cars
-    step_cars = 25
+    step_cars = 2
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         global_average_velocity.append(glob_avg_velocity)
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
-    
+    #'''
     # Package the required values into a text file so we don't have to run the sim 6042 times 
     with open('simulation_results_basic_system.txt', 'w') as file:
         file.write(f"cars_positions: {[car.pos for car in cars]}\n")
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         file.write(f"local_flow: {local_flow}\n")
         file.write(f"global_average_velocity: {global_average_velocity}\n")
         file.write(f"local_average_velocity: {local_average_velocity}\n")
-
+    #'''
     
     for car in cars:
 

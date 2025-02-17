@@ -36,7 +36,7 @@ class VehicleClass:
 
         for i, car in enumerate(cars):
             next_car = cars[(i + 1) % len(cars)]
-
+            
             # Calculate desired bumper-to-bumper distance (s*)
             s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
 
