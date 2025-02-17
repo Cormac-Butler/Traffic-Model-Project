@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # Model parameters
     max_cars = 60
     road_length = 300
-    steps = 1000  
+    steps = 1000 
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  

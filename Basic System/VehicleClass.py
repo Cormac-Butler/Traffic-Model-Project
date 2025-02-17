@@ -72,7 +72,7 @@ class VehicleClass:
         return cars
 
     def update_cars(cars, N, L, time_step):
-        #'''
+        '''
         while True:
             changes = False
 
@@ -112,32 +112,17 @@ class VehicleClass:
 
                     car.acc[-1] = 2 * (displacement - car.vel[-2] * time_step) / time_step**2
                     car.vel[-1] = 2 * displacement / time_step - car.vel[-2]
+
+                    if car.vel[-1] < 0:
+                        car.vel[-1] = 0
             
             if not changes:
                 break
-        #'''
+        '''
 
         for  i, car in enumerate(cars): 
             next_car = cars[(i + 1) % N]
-            #next_car_back = (next_car.pos[-1] - next_car.length) % L
-            #car_front = car.pos[-1]  # Front bumper of current car
             
-            # Compute headway correctly
-            #headway = (next_car_back - car_front) % L  # Ensures wraparound works
-
-            #car.headway.append(headway)
-
-            #car.headway.append((next_car.pos[-1] - next_car.length - car.pos[-1]))
-
-
-            #car.dv.append(car.vel[-1] - next_car.vel[-1])
-            '''
-            # Calculate the position of the rear bumper of the next car
-            next_car_rear = (next_car.pos[-1] - next_car.length) % L
-
-            # Calculate the headway
-            headway = (next_car_rear - car.pos[-1]) % L
-
             # Compute headway
             if next_car.pos[-1] > next_car.length:
                 if next_car.pos[-1] > car.pos[-1]:
@@ -151,16 +136,14 @@ class VehicleClass:
                 print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
             #if (next_car.pos[-1] - next_car.length) % L < car.pos[-1]:
             #    print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
-            # Ensure the headway is not less than the minimum gap
-            min_safe_gap = car.min_gap
-            if headway < min_safe_gap:
-                headway = min_safe_gap
+            '''
+            if car.headway[-1] < car.min_gap:
+                difference = abs(car.headway[-1] - car.min_gap)
 
-                # Adjust the position of the current car to maintain the minimum gap
-                car.pos[-1] = (next_car_rear - min_safe_gap) % L
+                car.headway[-1] = car.min_gap
 
-            # Update headway and velocity difference
-            car.headway.append(headway)'''
+                car.pos[-1] = (car.pos[-1] - difference) % L
+            '''
             car.dv.append(car.vel[-1] - next_car.vel[-1])
 
         return cars
