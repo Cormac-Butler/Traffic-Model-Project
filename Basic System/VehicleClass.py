@@ -83,20 +83,15 @@ class VehicleClass:
                 displacement = 0 
 
                 # Get minimum safety gap
-                min_safe_gap = car.min_gap - next_car.length
+                min_safe_gap = car.min_gap
 
                 # Compute headway
-                if next_car.pos[-1] >= next_car.length + car.min_gap:
+                if next_car.pos[-1] > next_car.length:
                     if next_car.pos[-1] > car.pos[-1]:
                         car.headway.append(next_car.pos[-1] - next_car.length - car.pos[-1])
                     else:
                         car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-                elif next_car.pos[-1] > next_car.length:
-                    if next_car.pos[-1] > car.pos[-1]:
-                        car.headway.append(next_car.pos[-1] - next_car.length - car.pos[-1])
-                    else:
-                        car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-                elif next_car.pos[-1] - next_car.length < 0:
+                else:
                     car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
 
                 if car.headway[-1] < min_safe_gap:
@@ -124,7 +119,7 @@ class VehicleClass:
 
         for  i, car in enumerate(cars): 
             next_car = cars[(i + 1) % N]
-            '''#next_car_back = (next_car.pos[-1] - next_car.length) % L
+            #next_car_back = (next_car.pos[-1] - next_car.length) % L
             #car_front = car.pos[-1]  # Front bumper of current car
             
             # Compute headway correctly
@@ -136,7 +131,7 @@ class VehicleClass:
 
 
             #car.dv.append(car.vel[-1] - next_car.vel[-1])
-
+            '''
             # Calculate the position of the rear bumper of the next car
             next_car_rear = (next_car.pos[-1] - next_car.length) % L
 
@@ -144,21 +139,16 @@ class VehicleClass:
             headway = (next_car_rear - car.pos[-1]) % L
 
             # Compute headway
-            if next_car.pos[-1] >= next_car.length + car.min_gap:
+            if next_car.pos[-1] > next_car.length:
                 if next_car.pos[-1] > car.pos[-1]:
                     car.headway.append(next_car.pos[-1] - next_car.length - car.pos[-1])
                 else:
                     car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-            elif next_car.pos[-1] > next_car.length:
-                if next_car.pos[-1] > car.pos[-1]:
-                    car.headway.append(next_car.pos[-1] - next_car.length - car.pos[-1])
-                else:
-                    car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-            elif next_car.pos[-1] - next_car.length < 0:
+            else:
                 car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-        
-            if car.headway[-1] < 1.9:
-                 print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
+            
+            if car.headway[-1] <= -1:
+                print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
             #if (next_car.pos[-1] - next_car.length) % L < car.pos[-1]:
             #    print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
             # Ensure the headway is not less than the minimum gap
