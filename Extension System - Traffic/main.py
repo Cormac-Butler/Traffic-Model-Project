@@ -46,6 +46,7 @@ if __name__ == "__main__":
     global_density, local_density = [], []
     global_average_velocity, local_average_velocity = [], []
 
+    '''
     for res in results:
         N, carsMaxN, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
 
@@ -56,20 +57,33 @@ if __name__ == "__main__":
         global_average_velocity.append(glob_avg_velocity)
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
+    '''
 
-    # OrganiSe results into a dictionary
+    for _, carMax, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in results:
+        global_flow.append(g_flow)
+        global_density.append(g_density)
+        local_flow.append(l_flow)
+        local_density.append(l_density)
+        global_average_velocity.append(g_avg_vel)
+        local_average_velocity.append(l_avg_vel)
+        cars = carMax
+
+    cars_positions = [car.pos for car in cars]
+    
+    print(traffic_light)
+    # Organise data into a dictionary
     simulation_data = {
         "traffic_light": traffic_light, 
-        "cars_positions": [[car.pos for car in res[1]] for res in results],
+        "cars_positions": cars_positions,
         "road_length": road_length,
-        "global_density": [res[3] for res in results],
-        "global_flow": [res[2] for res in results],
-        "local_density": [res[5] for res in results],
-        "local_flow": [res[4] for res in results],
-        "global_average_velocity": [res[6] for res in results],
-        "local_average_velocity": [res[7] for res in results]
+        "global_density": global_density,
+        "global_flow": global_flow,
+        "local_density": local_density,
+        "local_flow": local_flow,
+        "global_average_velocity": global_average_velocity,
+        "local_average_velocity": local_average_velocity
     }
 
     # Save to a pickle file
     with open('simulation_results_traffic_extension.pkl', 'wb') as file:
-        pickle.dump(simulation_data, file)
+        pickle.dump(simulation_data, file,  protocol=pickle.HIGHEST_PROTOCOL)

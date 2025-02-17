@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import TrafficVisualization as tv
-import numpy as np
+import pickle
 
 def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.scatter(x, y, color='black', marker='x', label='Data Points', alpha=0.25)
@@ -18,29 +18,23 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-def extractFile(filename):
-
-    with open(filename, 'r') as file:
-        data = file.readlines()
-    
-    results = {}
-    for line in data:
-        key, value = line.strip().split(': ')
-        results[key] = eval(value)
-    
+def extractFile():
+    results = []
+    with open('simulation_results_basic_system.pkl', 'rb') as file:
+        results = pickle.load(file)
     return results
 
 # Extract results from the file
-results = extractFile('simulation_results_basic_system.txt')
+results = extractFile()
 
-cars = results['cars_positions']
-road_length = results['road_length']
-global_density = results['global_density']
-global_flow = results['global_flow']
-local_density = results['local_density']
-local_flow = results['local_flow']
-global_average_velocity = results['global_average_velocity']
-local_average_velocity = results['local_average_velocity']
+cars = results.get('cars_positions', [])
+road_length = results.get('road_length', 0)
+global_density = results.get('global_density', [])
+global_flow = results.get('global_flow', [])
+local_density = results.get('local_density', [])
+local_flow = results.get('local_flow', [])
+global_average_velocity = results.get('global_average_velocity', [])
+local_average_velocity = results.get('local_average_velocity', [])
 
 # Create a 2x3 figure layout
 fig, axes = plt.subplots(2, 3, figsize=(15, 10))

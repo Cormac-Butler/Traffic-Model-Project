@@ -55,6 +55,7 @@ if __name__ == "__main__":
         local_average_velocity.append(loc_avg_velocity)
         cars = carsMaxN
 
+    print(cars[0].pos[1])
     # Package the required values into a text file so we don't have to run the sim 6042 times 
     with open('simulation_results_speed_extension.txt', 'w') as file:
         file.write(f"cars_positions: {[car.pos for car in cars]}\n")

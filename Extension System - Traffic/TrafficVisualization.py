@@ -3,12 +3,12 @@ import random
 import math
 
 class TrafficVisualization:
-    def __init__(self, car_objects, road_length, road_radius, car_size, update_interval, traffic_light, scale_factor=5):
+    def __init__(self, car_objects, road_length, car_size, update_interval, traffic_light, scale_factor=5):
         self.root = tk.Tk()
         self.root.title("Traffic Simulation")
 
         self.scale_factor = scale_factor
-        self.road_radius = road_radius * scale_factor
+        self.road_radius = (road_length / (2 * math.pi)) * scale_factor
         self.car_size = car_size
         self.update_interval = update_interval
         self.interp_steps = 5
@@ -19,7 +19,7 @@ class TrafficVisualization:
         self.num_steps = len(car_objects[0]) if self.num_cars > 0 else 0
         self.road_length = road_length
         self.center = (self.road_radius + 50, self.road_radius + 50)
-
+        
         self.traffic_light = traffic_light
 
         self.canvas = tk.Canvas(self.root, width=2 * self.road_radius + 100, height=2 * self.road_radius + 100)
@@ -84,9 +84,7 @@ class TrafficVisualization:
         next_step = self.current_step + 1
         current_time = next_step * self.update_interval / 1000 
 
-        for i, car in enumerate(self.cars):
-            if next_step >= len(self.car_objects[i].pos):
-                continue  
+        for i, car in enumerate(self.cars):  
 
             pos_current = self.car_objects[i][self.current_step] / self.road_length
             pos_next = self.car_objects[i][next_step] / self.road_length

@@ -25,8 +25,8 @@ def init_simulation(N, L):
 
         changes = False
 
-        # Loop backward to adjust positions
-        for i in range(N - 1, -1, -1):
+        # Loop to adjust positions
+        for i in range(N):
             
             # Next car index
             j = (i + 1) % N 
@@ -34,7 +34,7 @@ def init_simulation(N, L):
             min_safe_gap = min_gap[i]
 
             # Compute headway
-            if pos[j] - length[j] > pos[i]:
+            if pos[j] - length[j] >= pos[i]:
                 headway = pos[j] - pos[i] - length[j]
                
             else:
@@ -55,7 +55,7 @@ def init_simulation(N, L):
     # Calculate headway
     for i in range(N):
         next_car = (i + 1) % N
-        headway = [(pos[next_car] - pos[i]) % L]
+        headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
 
         car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)

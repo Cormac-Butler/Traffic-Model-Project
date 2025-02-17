@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import TrafficVisualization as tv
-import numpy as np
 import pickle
+from TrafficLightClass import TrafficLightClass as tl
 
 def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.scatter(x, y, color='black', marker='x', label='Data Points', alpha=0.25)
@@ -19,14 +19,14 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-def extractFile(file):
+def extractFile():
     results = []
     with open('simulation_results_traffic_extension.pkl', 'rb') as file:
         results = pickle.load(file)
     return results
 
 # Extract results from the file
-results = extractFile('simulation_results_traffic_extension.txt')
+results = extractFile()
 
 cars = results['cars_positions']
 traffic_light = results['traffic_light']

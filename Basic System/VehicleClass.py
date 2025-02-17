@@ -48,10 +48,6 @@ class VehicleClass:
             velnew[i] = car.vel[-1] + acc_new[i] * time_step
             posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
-            if velnew[i] > 1000:
-                print('hello')
-                ...
-
             # Ensure velocity does not go negative
             if velnew[i] <= 0:
 
@@ -78,7 +74,7 @@ class VehicleClass:
         while True:
             changes = False
 
-            # Loop backward to adjust positions for safety gaps
+            # Loop to adjust positions for safety gaps
             for i in range(N):
                 car = cars[i]
                 next_car = cars[(i + 1) % N]
@@ -101,17 +97,20 @@ class VehicleClass:
                     # Adjust the position of the current car to maintain the minimum gap
                     car.pos[-1] = (next_car.pos[-1] - next_car.length - min_safe_gap) % L
 
-                    displacement = abs(car.pos[-1] - car.pos[-2])
-
-                    if car.pos[-1] > car.pos[-2]:
+                    if car.pos[-1] >= car.pos[-2]:
                         displacement = car.pos[-1] - car.pos[-2]
+                    else:
+                        displacement = (car.pos[-1] + L) - car.pos[-2]
 
                     car.acc[-1] = 2 * (displacement - car.vel[-2] * time_step) / time_step**2
                     car.vel[-1] = 2 * displacement / time_step - car.vel[-2]
 
-                    if car.vel[-1] > 1000:
-                        ...
-
+                    if car.vel[-1] > 0:
+                        print(car.pos[-1])
+                        print(car.pos[-2])
+                        print(displacement)
+                        print(car.headway[-2])
+                        exit()
             
             if not changes:
                 break
