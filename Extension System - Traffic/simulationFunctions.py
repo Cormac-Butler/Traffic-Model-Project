@@ -126,7 +126,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
         den, flo = flow_global(N, [car.vel[-1] for car in cars if car.car_id != -1], L)
-        '''
+        
         # Detection loop for local measurements
         for i, car in enumerate(cars):
             if car.car_id != -1 and ((car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L)):
@@ -148,7 +148,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 # Store detection time and velocity at the exact moment of crossing det_point
                 detect_time[i] = time_pass + delta_t
                 detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
-        '''
+    
     return cars, den, flo, detect_time, detect_vel
 
 

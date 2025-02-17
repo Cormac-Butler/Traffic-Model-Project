@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     # Package the required values into a text file so we don't have to run the sim 6042 times 
     with open('simulation_results_traffic_extension.txt', 'w') as file:
-        file.write(f"traffic_light: {traffic_light.position}\n")
+        file.write(f"traffic_light: {traffic_light}\n")
         file.write(f"cars_positions: {[car.pos for car in cars]}\n")
         file.write(f"road_length: {road_length}\n")
         file.write(f"global_density: {global_density}\n")

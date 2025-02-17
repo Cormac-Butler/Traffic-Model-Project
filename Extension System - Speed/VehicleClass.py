@@ -122,6 +122,6 @@ class VehicleClass:
 
             next_car = cars[(i + 1) % N]
 
-            car.dv.append(next_car.vel[-1] - car.vel[-1])
+            car.dv.append(car.vel[-1] - next_car.vel[-1])
         
         return cars

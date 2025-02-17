@@ -16,7 +16,7 @@ class TrafficVisualization:
         self.car_objects = car_objects
         self.num_cars = len(car_objects)
         self.current_step = 0
-        self.num_steps = len(car_objects[0].pos) if self.num_cars > 0 else 0
+        self.num_steps = len(car_objects[0]) if self.num_cars > 0 else 0
         self.road_length = road_length
         self.center = (self.road_radius + 50, self.road_radius + 50)
 
@@ -42,7 +42,7 @@ class TrafficVisualization:
     def create_cars(self):
         cars = []
         for i, car_obj in enumerate(self.car_objects):
-            pos = car_obj.pos[0] / self.road_length
+            pos = car_obj[0] / self.road_length
             angle = 2 * math.pi * pos
             x = self.center[0] + self.road_radius * math.cos(angle)
             y = self.center[1] + self.road_radius * math.sin(angle)
@@ -88,8 +88,8 @@ class TrafficVisualization:
             if next_step >= len(self.car_objects[i].pos):
                 continue  
 
-            pos_current = self.car_objects[i].pos[self.current_step] / self.road_length
-            pos_next = self.car_objects[i].pos[next_step] / self.road_length
+            pos_current = self.car_objects[i][self.current_step] / self.road_length
+            pos_next = self.car_objects[i][next_step] / self.road_length
             
             for j in range(1, self.interp_steps + 1):
                 interp_pos = pos_current + (pos_next - pos_current) * (j / self.interp_steps)

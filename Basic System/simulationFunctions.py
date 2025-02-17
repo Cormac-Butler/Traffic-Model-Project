@@ -143,7 +143,7 @@ def analyse_local(track_det_time, track_det_vel, time):
 
     loc_dens = loc_flow / (avg_speed * 3.6)
 
-    return loc_flow, loc_dens
+    return 0,0#loc_flow, loc_dens
 
 
 

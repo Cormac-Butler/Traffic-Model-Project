@@ -113,6 +113,7 @@ class VehicleClass:
                             velnew[i] = 0
                             posnew[i] = min_pos
                             acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
+                '''
                 elif light_status == "orange":
 
                     # Calculate remaining time in the orange phase
@@ -135,7 +136,7 @@ class VehicleClass:
                         posnew[i] = car.pos[-1] + velnew[i] * time_step
                         acc_new[i] = -car.comf_decel
                 
-                '''
+                
                 elif light_status == 'orange':
                 # Check if the car has enough time to pass through the light before it turns red
                 time_to_light = dist_to_light / car.vel[-1] if car.vel[-1] > 0 else float('inf')
@@ -207,6 +208,6 @@ class VehicleClass:
 
             next_car = cars[(i + 1) % N]
 
-            car.dv.append(next_car.vel[-1] - car.vel[-1])
+            car.dv.append(car.vel[-1] - next_car.vel[-1])
         
         return cars

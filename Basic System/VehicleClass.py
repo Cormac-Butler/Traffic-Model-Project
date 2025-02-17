@@ -35,12 +35,13 @@ class VehicleClass:
         acc_new = np.zeros(len(cars))
 
         for i, car in enumerate(cars):
+            next_car = cars[(i + 1) % len(cars)]
 
             # Calculate desired bumper-to-bumper distance (s*)
             s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
 
             # Calculate acceleration using IDM
-            acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / car.headway[-1])**2)
+            acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1] - next_car.length))**2)
 
         for i, car in enumerate(cars):
 
@@ -49,7 +50,7 @@ class VehicleClass:
             posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
             # Ensure velocity does not go negative
-            if velnew[i] < 0:
+            if velnew[i] <= 0:
 
                 # Calculate time to stop
                 if abs(acc_new[i]) > 1e-6:
@@ -75,7 +76,7 @@ class VehicleClass:
             changes = False
 
             # Loop backward to adjust positions for safety gaps
-            for i in range(N - 1, -1, -1):
+            for i in range(N):
                 car = cars[i]
                 next_car = cars[(i + 1) % N]
                 displacement = 0 
@@ -87,7 +88,7 @@ class VehicleClass:
                 if next_car.pos[-1] > car.pos[-1]:
                     car.headway.append(next_car.pos[-1] - car.pos[-1])
                 else:
-                    car.headway.append(next_car.pos[-1] + L - car.pos[-1])
+                        car.headway.append(next_car.pos[-1] + L - car.pos[-1])
 
                 if car.headway[-1] < min_safe_gap:
                     
@@ -104,6 +105,7 @@ class VehicleClass:
 
                     car.acc[-1] = 2 * (displacement - car.vel[-2] * time_step) / time_step**2
                     car.vel[-1] = 2 * displacement / time_step - car.vel[-2]
+
             
             if not changes:
                 break
@@ -112,6 +114,6 @@ class VehicleClass:
 
             next_car = cars[(i + 1) % N]
 
-            car.dv.append(next_car.vel[-1] - car.vel[-1])
+            car.dv.append(car.vel[-1] - next_car.vel[-1])
         
         return cars

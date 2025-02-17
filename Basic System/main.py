@@ -16,17 +16,17 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 50
-    road_length = 300
-    steps = 10000  
+    max_cars = 600
+    road_length = 3200
+    steps = 1000  
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  
     time_step = 0.5
 
-    start_cars = 2
+    start_cars = 100
     end_cars = max_cars
-    step_cars = 2
+    step_cars = 25
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -62,3 +62,8 @@ if __name__ == "__main__":
         file.write(f"local_flow: {local_flow}\n")
         file.write(f"global_average_velocity: {global_average_velocity}\n")
         file.write(f"local_average_velocity: {local_average_velocity}\n")
+
+    
+    for car in cars:
+
+        print(max(car.vel))
