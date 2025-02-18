@@ -98,19 +98,16 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, speed_limit_
 
                 s = det_point - car.pos[-2]
 
-                # Check if acceleration is significant
-                if abs(car.acc[-1]) > 1e-6:
+                # Calculate delta t
+                if car.acc[-1] == 0:
+                    delta_t = s / car.vel[-2]
+                else:
                     sqrt_term = car.vel[-2]**2 + 2 * car.acc[-1] * s
+                    delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
                     
-                    # Ensure the sqrt term is non-negative
-                    if sqrt_term >= 0:
-                        delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
-                    else:
-                        delta_t = 0
-                    
-                    # Store detection time and velocity
-                    detect_time.append(time_pass + delta_t)
-                    detect_vel.append(car.vel[-2] + car.acc[-1] * delta_t)
+                # Store detection time and velocity
+                detect_time.append(time_pass + delta_t)
+                detect_vel.append(car.vel[-2] + car.acc[-1] * delta_t)
     
     return cars, den, flo, detect_time, detect_vel
 
