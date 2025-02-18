@@ -131,9 +131,28 @@ class VehicleClass:
                     car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
             else:
                 car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
+
+            if car.headway[-1] < car.min_gap:
+
+                # Calculate desired bumper-to-bumper distance (s*)
+                s_star = 2
+
+                # Calculate acceleration using IDM
+                acc_new = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
+                
+                # Update velocity and position
+                velnew = car.vel[-1] + acc_new * time_step
+
+                # Ensure velocity does not go negative
+                if velnew <= 0:
+                    velnew = 0
+                
+                car.acc[-1] = acc_new
+                car.vel[-1] = velnew
             
             if car.headway[-1] <= -1:
                 print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
+
             #if (next_car.pos[-1] - next_car.length) % L < car.pos[-1]:
             #    print(car.car_id, car.pos[-1], next_car.pos[-1], car.headway[-1])
             '''
