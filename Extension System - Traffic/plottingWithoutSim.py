@@ -85,7 +85,7 @@ axes[1, 2].grid()
 
 # Adjust layout to prevent overlap
 plt.tight_layout()
-plt.show()
+plt.savefig('graph4')
 
 # Create a figure with multiple subplots
 fig, axes = plt.subplots(3, 2, figsize=(12, 12))
@@ -102,7 +102,7 @@ axes[2, 1].axis('off')
 
 # Adjust layout and show all plots in one window
 plt.tight_layout()
-plt.show()
+plt.savefig('graph5')
 
 # Create visualisation
 tv.TrafficVisualization(cars, road_length, 5, 250, traffic_light, 5)

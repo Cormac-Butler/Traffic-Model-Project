@@ -1,5 +1,5 @@
 import numpy as np
-from VehicleClass import VehicleClass as vc
+from newVehicle import VehicleClass as vc
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -18,27 +18,27 @@ def init_simulation(N, L):
     # Calculate initial positions with min_gap
     for i in range(N):
         pos[i] = i * (length[i] + min_gap[i])
-    #pos = np.linspace(0, L - 10, N, endpoint=False)
 
     # Ensure the minimum gap is maintained
     while True:
 
         changes = False
 
-        # Loop backward to adjust positions
-        for i in range(N - 1, -1, -1):
+        # Loop to adjust positions
+        for i in range(N):
             
             # Next car index
             j = (i + 1) % N 
 
-            min_safe_gap = min_gap[i] + length[j]
+            min_safe_gap = min_gap[i]
 
             # Compute headway
-            if pos[j] > pos[i]:
-                headway = pos[j] - pos[i]
+            if pos[j] - length[j] >= pos[i]:
+                headway = pos[j] - pos[i] - length[j]
+               
             else:
-                headway = (pos[j] + L - pos[i])
-
+                headway = (pos[j] - length[j] + L - pos[i])
+                
             # Ensure minimum gap is maintained
             if headway < min_safe_gap:
                 
@@ -53,7 +53,7 @@ def init_simulation(N, L):
     # Calculate headway
     for i in range(N):
         next_car = (i + 1) % N
-        headway = [(pos[next_car] - pos[i]) % L]
+        headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
 
         car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
@@ -74,18 +74,18 @@ def flow_global(N, velnew, L):
 
     return dens, flow
 
-def add_phantom_car(cars, traffic_light):
-
-    # Create the phantom car
-    phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [float('inf')], [0], 0, 4, 1, 2, 1.5, 1, 3)
+def add_phantom_car(cars, traffic_light, L):
 
     # Find the index to insert the phantom car without sorting
     insert_index = None
     for i in range(len(cars)):
-        if cars[i].pos[-1] >= traffic_light.position:
+        if cars[i].pos[-1] >= traffic_light.boundary:
             insert_index = i
             break
 
+    # Create the phantom car
+    phantom_car = vc(-1, 0, [traffic_light.boundary], cars[i-1].vel, [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
+    
     # Insert the phantom car at the correct position
     if insert_index is not None:
         cars.insert(insert_index, phantom_car)
@@ -103,23 +103,32 @@ def remove_phantom_car(cars):
 
 
 
-def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel, time_step, traffic_light):
+def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_light):
 
     den = 0
     flo = 0 
+    detect_time = []
+    detect_vel = []
 
     # Get traffic light status
     light_status = traffic_light.status(time_pass)
-    '''
+    traffic_light.time_in_state += time_step
+
+    #'''
     if light_status == "red":
-        cars = add_phantom_car(cars, traffic_light)
-    '''
+        cars = add_phantom_car(cars, traffic_light, L)
+    else:
+        cars = remove_phantom_car(cars)
+    #'''
+
     # Update positions and velocities
-    cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status)
+    cars = vc.upd_pos_vel(cars, time_step, L)
+    
     '''
     if light_status == "red":
         cars = remove_phantom_car(cars)
     '''
+
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
     
@@ -145,9 +154,10 @@ def Step(N, cars, time_pass, time_measure, det_point, L, detect_time, detect_vel
                 else:
                     delta_t = s / car.vel[-2] if car.vel[-2] > 0 else 0 
                 
-                # Store detection time and velocity at the exact moment of crossing det_point
-                detect_time[i] = time_pass + delta_t
-                detect_vel[i] = car.vel[-2] + car.acc[-1] * delta_t
+                # Store detection time and velocity
+                detect_time.append(time_pass + delta_t)
+                detect_vel.append(car.vel[-2] + car.acc[-1] * delta_t)
+    
     
     return cars, den, flo, detect_time, detect_vel
 
@@ -189,17 +199,16 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, traffic_light
     track_dens = []
     track_det_time = []
     track_det_vel = []
-    detect_time = np.zeros(N)
-    detect_vel = np.zeros(N)
 
     # Initialise cars
     cars = init_simulation(N, L)
 
     for i in range(steps):
+        
         time_pass = i * time_step
 
         if time_pass > steps_measure * time_step:
-            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, detect_time, detect_vel, time_step, traffic_light)
+            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, time_step, traffic_light)
 
             track_flow.append(flo)
             track_dens.append(den)
@@ -207,7 +216,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, traffic_light
             track_det_time.extend(detect_time)
             track_det_vel.extend(detect_vel)
         else:
-            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, [], [], time_step, traffic_light)
+            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, time_step, traffic_light)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)

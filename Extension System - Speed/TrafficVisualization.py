@@ -25,8 +25,7 @@ class TrafficVisualization:
 
         self.draw_road()
         self.cars = self.create_cars()
-        
-        # Start animation
+
         self.smooth_update()
         self.root.mainloop()
 
@@ -64,11 +63,9 @@ class TrafficVisualization:
         next_step = self.current_step + 1
 
         for i, car in enumerate(self.cars):
-            # Get positions for current and next frame
             pos_current = self.car_objects[i][self.current_step] / self.road_length
             pos_next = self.car_objects[i][next_step] / self.road_length
 
-            # Interpolation to prevent large jumps
             for j in range(1, self.interp_steps + 1):
                 interp_pos = pos_current + (pos_next - pos_current) * (j / self.interp_steps)
                 angle = 2 * math.pi * interp_pos

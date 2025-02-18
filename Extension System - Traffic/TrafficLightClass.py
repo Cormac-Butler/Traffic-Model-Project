@@ -1,11 +1,13 @@
 from VehicleClass import VehicleClass as vc
 
 class TrafficLightClass:
-    def __init__(self, position, green_duration, orange_duration, red_duration):
+    def __init__(self, position, green_duration, orange_duration, red_duration, time_in_state):
         self.position = position
+        self.boundary = position - 10
         self.green_duration = green_duration
-        self.orange_duration = 0#orange_duration
+        self.orange_duration = orange_duration
         self.red_duration = red_duration
+        self.time_in_state = time_in_state
 
     def status(self, time):
         cycle_time = self.green_duration + self.orange_duration + self.red_duration

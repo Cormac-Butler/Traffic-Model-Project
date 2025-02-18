@@ -43,19 +43,6 @@ if __name__ == "__main__":
     global_average_velocity, local_average_velocity = [], []
     cars_positions = [0] * max_cars
 
-    '''
-    for res in results:
-        N, carsMaxN, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
-
-        global_flow.append(glob_flow)
-        global_density.append(glob_density)
-        local_flow.append(loc_flow)
-        local_density.append(loc_dens)
-        global_average_velocity.append(glob_avg_velocity)
-        local_average_velocity.append(loc_avg_velocity)
-        cars = carsMaxN
-    '''
-
     for _, carMax, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in results:
         global_flow.append(g_flow)
         global_density.append(g_density)

@@ -18,7 +18,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 2
+    max_cars = 10
     road_length = 300
     steps = 1000  
     steps_before_measure = 100  
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define traffic light parameters
-    traffic_light = tl(100, 15, 0, 10)
+    traffic_light = tl(100, 15, 0, 10, 0)
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -46,19 +46,6 @@ if __name__ == "__main__":
     global_density, local_density = [], []
     global_average_velocity, local_average_velocity = [], []
 
-    '''
-    for res in results:
-        N, carsMaxN, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
-
-        global_flow.append(glob_flow)
-        global_density.append(glob_density)
-        local_flow.append(loc_flow)
-        local_density.append(loc_dens)
-        global_average_velocity.append(glob_avg_velocity)
-        local_average_velocity.append(loc_avg_velocity)
-        cars = carsMaxN
-    '''
-
     for _, carMax, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in results:
         global_flow.append(g_flow)
         global_density.append(g_density)
@@ -70,7 +57,6 @@ if __name__ == "__main__":
 
     cars_positions = [car.pos for car in cars]
     
-    print(traffic_light)
     # Organise data into a dictionary
     simulation_data = {
         "traffic_light": traffic_light, 

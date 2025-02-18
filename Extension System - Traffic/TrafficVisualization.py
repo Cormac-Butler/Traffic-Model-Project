@@ -80,15 +80,13 @@ class TrafficVisualization:
     def smooth_update(self):
         if self.current_step >= self.num_steps - 1:
             return
-
+        
         next_step = self.current_step + 1
-        current_time = next_step * self.update_interval / 1000 
 
-        for i, car in enumerate(self.cars):  
-
+        for i, car in enumerate(self.cars):
             pos_current = self.car_objects[i][self.current_step] / self.road_length
             pos_next = self.car_objects[i][next_step] / self.road_length
-            
+
             for j in range(1, self.interp_steps + 1):
                 interp_pos = pos_current + (pos_next - pos_current) * (j / self.interp_steps)
                 angle = 2 * math.pi * interp_pos
@@ -98,6 +96,5 @@ class TrafficVisualization:
                 self.canvas.coords(car, x - self.car_size, y - self.car_size, x + self.car_size, y + self.car_size)
                 self.root.update_idletasks()
 
-        self.update_traffic_light(current_time) 
         self.current_step += 1
         self.root.after(self.update_interval, self.smooth_update)

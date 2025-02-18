@@ -1,5 +1,6 @@
 import simulationFunctions as sf
 import multiprocessing as mp
+import pickle
 
 def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length, speed_limit_zones):
     
@@ -16,7 +17,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 10
+    max_cars = 60
     road_length = 300
     steps = 1000  
     steps_before_measure = 100  
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define speed limit zones
-    speed_limit_zones = [(0, 50, 30), (50, 100, 20), (100, 200, 30), (200, 250, 5), (250, 300, 20)]
+    speed_limit_zones = [(0, 50, 30), [50, 200, 100], [200, 300, 10]]
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
@@ -43,26 +44,31 @@ if __name__ == "__main__":
     global_flow, local_flow = [], []
     global_density, local_density = [], []
     global_average_velocity, local_average_velocity = [], []
+    cars_positions = [0] * max_cars
 
-    for res in results:
-        N, carsMaxN, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity = res
+    for _, carMax, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in results:
+        global_flow.append(g_flow)
+        global_density.append(g_density)
+        local_flow.append(l_flow)
+        local_density.append(l_density)
+        global_average_velocity.append(g_avg_vel)
+        local_average_velocity.append(l_avg_vel)
+        cars = carMax
 
-        global_flow.append(glob_flow)
-        global_density.append(glob_density)
-        local_flow.append(loc_flow)
-        local_density.append(loc_dens)
-        global_average_velocity.append(glob_avg_velocity)
-        local_average_velocity.append(loc_avg_velocity)
-        cars = carsMaxN
+    cars_positions = [car.pos for car in cars]
+    
+    # Organise data into a dictionary
+    simulation_data = {
+        "cars_positions": cars_positions,
+        "road_length": road_length,
+        "global_density": global_density,
+        "global_flow": global_flow,
+        "local_density": local_density,
+        "local_flow": local_flow,
+        "global_average_velocity": global_average_velocity,
+        "local_average_velocity": local_average_velocity
+    }
 
-    print(cars[0].pos[1])
-    # Package the required values into a text file so we don't have to run the sim 6042 times 
-    with open('simulation_results_speed_extension.txt', 'w') as file:
-        file.write(f"cars_positions: {[car.pos for car in cars]}\n")
-        file.write(f"road_length: {road_length}\n")
-        file.write(f"global_density: {global_density}\n")
-        file.write(f"global_flow: {global_flow}\n")
-        file.write(f"local_density: {local_density}\n")
-        file.write(f"local_flow: {local_flow}\n")
-        file.write(f"global_average_velocity: {global_average_velocity}\n")
-        file.write(f"local_average_velocity: {local_average_velocity}\n")
+    # Save using pickle with highest protocol for speed optimization
+    with open('simulation_results_speed_system.pkl', 'wb') as file:
+        pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
