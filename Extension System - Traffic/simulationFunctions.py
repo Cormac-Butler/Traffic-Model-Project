@@ -1,5 +1,5 @@
 import numpy as np
-from newVehicle import VehicleClass as vc
+from VehicleClass import VehicleClass as vc
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -79,18 +79,24 @@ def add_phantom_car(cars, traffic_light, L):
     # Find the index to insert the phantom car without sorting
     insert_index = None
     for i in range(len(cars)):
-        if cars[i].pos[-1] >= traffic_light.boundary:
+        if cars[i].pos[-1] >= traffic_light.position:
             insert_index = i
             break
 
     # Create the phantom car
-    phantom_car = vc(-1, 0, [traffic_light.boundary], cars[i-1].vel, [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
+    phantom_car = vc(-1, 0, [traffic_light.position], cars[i-1].vel, [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
     
     # Insert the phantom car at the correct position
     if insert_index is not None:
         cars.insert(insert_index, phantom_car)
+
+        cars[i - 1].headway[-1] = ((cars[i].pos[-1] - cars[i - 1].pos[-1]) % L)
+        cars[i - 1].dv[-1] = cars[i - 1].vel[-1]
     else:
-        cars.append(phantom_car) 
+        cars.append(phantom_car)
+
+        cars[-2].headway[-1] = ((cars[-1].pos[-1] - cars[-2].pos[-1]) % L)
+        cars[-2].dv[-1] = cars[-2].vel[-1]
 
     return cars
 
@@ -114,24 +120,25 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     light_status = traffic_light.status(time_pass)
     traffic_light.time_in_state += time_step
 
+    if (traffic_light.time_in_state == traffic_light.green_duration and light_status == 'green') or (traffic_light.time_in_state == traffic_light.orange_duration and light_status == 'orange') or (traffic_light.time_in_state == traffic_light.red_duration and light_status == 'red'):
+        traffic_light.time_in_state = 0
+
     #'''
-    if light_status == "red":
+    # Add phantom car based on traffic light status
+    if light_status == "red" and len(cars) == N:
         cars = add_phantom_car(cars, traffic_light, L)
-    else:
+    
+    # Remove phantom car based on traffic light status
+    elif light_status == 'red' and len(cars) > N:
         cars = remove_phantom_car(cars)
     #'''
 
     # Update positions and velocities
-    cars = vc.upd_pos_vel(cars, time_step, L)
-    
-    '''
-    if light_status == "red":
-        cars = remove_phantom_car(cars)
-    '''
+    cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status, time_pass)
 
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
-    
+
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
         den, flo = flow_global(N, [car.vel[-1] for car in cars if car.car_id != -1], L)
@@ -141,19 +148,21 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
             if car.car_id != -1 and ((car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L)):
 
                 s = det_point - car.pos[-2]
-
+                
                 # Calculate delta t
-                if car.acc[-1] == 0:
+                if car.acc[-2] == 0:
                     delta_t = s / car.vel[-2]
                 else:
-                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-1] * s
-                    delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-1]
+                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-2] * s
+
+                    if sqrt_term < 0:
+                        print(car.car_id, sqrt_term, car.acc[-2], car.acc[-1])
+                    delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-2]
                     
                 # Store detection time and velocity
                 detect_time.append(time_pass + delta_t)
-                detect_vel.append(car.vel[-2] + car.acc[-1] * delta_t)
-    
-    
+                detect_vel.append(car.vel[-2] + car.acc[-2] * delta_t)
+
     return cars, den, flo, detect_time, detect_vel
 
 
@@ -217,5 +226,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, traffic_light
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)
 
     print('Simulation for car total', N, 'completed')
+
+    cars = remove_phantom_car(cars)
 
     return cars, glob_flow, glob_dens, loc_flow, loc_dens

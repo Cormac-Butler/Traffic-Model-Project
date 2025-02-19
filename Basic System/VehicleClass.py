@@ -69,11 +69,13 @@ class VehicleClass:
         return cars
 
     def update_cars(cars, N, L, time_step):
+        acc = [car.acc[-1] for car in cars]
         
         for  i, car in enumerate(cars): 
             next_car = cars[(i + 1) % N]
             
             # Compute headway
+            '''
             if next_car.pos[-1] > next_car.length:
                 if next_car.pos[-1] > car.pos[-1]:
                     car.headway.append(next_car.pos[-1] - next_car.length - car.pos[-1])
@@ -81,7 +83,9 @@ class VehicleClass:
                     car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
             else:
                 car.headway.append(next_car.pos[-1] - next_car.length + L - car.pos[-1])
-
+            '''
+            car.headway.append(((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L)
+            
             if car.headway[-1] < car.min_gap:
 
                 # Calculate desired bumper-to-bumper distance (s*)
@@ -97,9 +101,10 @@ class VehicleClass:
                 if velnew <= 0:
                     velnew = 0
                 
-                car.acc[-1] = acc_new
+                acc[i] = acc_new
                 car.vel[-1] = velnew
 
+            car.acc.append(acc[i])
             car.dv.append(car.vel[-1] - next_car.vel[-1])
 
         return cars
