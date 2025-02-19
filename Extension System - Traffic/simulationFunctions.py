@@ -84,7 +84,7 @@ def add_phantom_car(cars, traffic_light, L):
             break
 
     # Create the phantom car
-    phantom_car = vc(-1, 0, [traffic_light.position], cars[i-1].vel, [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
+    phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
     
     # Insert the phantom car at the correct position
     if insert_index is not None:
@@ -126,7 +126,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
         cars = add_phantom_car(cars, traffic_light, L)
     
     # Remove phantom car based on traffic light status
-    elif light_status == 'red' and len(cars) > N:
+    elif light_status != 'red' and len(cars) > N:
         cars = remove_phantom_car(cars)
     #'''
 

@@ -66,7 +66,7 @@ class VehicleClass:
                     velnew[i] = 0
                 
                 car.stopping_distance = - car.vel[-1]**2 / (-2 * car.comf_decel)
-
+        
         for i, car in enumerate(cars): 
             if car.car_id != -1:
                 
@@ -96,39 +96,23 @@ class VehicleClass:
                             steps_remaining = int(time_till_red / 0.5)
                             if steps_remaining > 0:
                                 acc_new[i] = -car.vel[-1] / time_till_red
-                                velnew[i] = car.vel[-1] + acc_new[i] * time_till_red
-                                posnew[i] = (velnew[i]**2 - car.vel[-1]**2) / (2 * acc_new[i])
+                                velnew[i] = car.vel[-1] + acc_new[i] * time_till_red / steps_remaining
+                                posnew[i] = car.pos[-1] + (velnew[i]**2 - car.vel[-1]**2) / (2 * acc_new[i]) - car.min_gap / steps_remaining
                             else:
                                 velnew[i] = 0
-                                posnew[i] = traffic_light.position
+                                posnew[i] = traffic_light.position - car.min_gap
                                 acc_new[i] = -car.vel[-1]**2 / (2 * dist_to_light)
 
                     # If the car is within a stopping distance, ensure a full stop
-                    elif dist_to_light <= car.max_comf_stopping_distance:
-                        if dist_to_light <= car.comf_stopping_distance:
+                    elif dist_to_light <= car.comf_stopping_distance:
                             velnew[i] = 0
-                            posnew[i] = traffic_light.position
-                            distance = (traffic_light.position - car.pos[-1]) % L
+                            posnew[i] = traffic_light.position - car.min_gap
+                            distance = (traffic_light.position - (car.pos[-1] - car.min_gap) % L) % L
 
                             if distance > 0:
                                 acc_new[i] = -car.vel[-1]**2 / (2 * distance)
                             else:
                                 acc_new[i] = 0
-                    
-                elif light_status == 'red':
-                    
-                    # Handle stopping at red light
-                    if car.pos[-1] == traffic_light.position:
-                        posnew[i] = car.pos[-1]
-                        velnew[i] = 0
-                        acc_new[i] = 0
-
-                    # Handle coming up to traffic light
-                    elif car.pos[-1] < traffic_light.position <= posnew[i]:
-                        velnew[i] = 0
-                        posnew[i] = traffic_light.position
-                        distance = traffic_light.position - car.pos[-1]
-                        acc_new[i] = -car.vel[-1]**2 / (2 * distance)
                     else:
                         index = (i + 1) % len(cars)
                         next_car = cars[index]
@@ -146,7 +130,75 @@ class VehicleClass:
                                 velnew[i] = 0
                                 posnew[i] = min_pos
                                 acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
-                
+                    
+                elif light_status == 'red':
+                    
+                    if car.car_id == 0 and car.pos[-1] > 90:
+                        ...
+                    # Handle stopping at red light
+                    if car.pos[-1] == traffic_light.position - car.min_gap:
+                        posnew[i] = car.pos[-1]
+                        velnew[i] = 0
+                        acc_new[i] = 0
+
+                    # Handle coming up to traffic light
+                    elif car.pos[-1] < traffic_light.position - car.min_gap <= posnew[i]:
+                        
+                        index = (i + 1) % len(cars)
+                        next_car = cars[index]
+
+                        if next_car.car_id == -1:
+                            index = (i + 2) % len(cars)
+                            next_car = cars[index]
+
+                        if ((car.pos[-1] - car.length) % L - next_car.pos[-1]) % L < car.max_comf_stopping_distance:
+                            safe_gap = car.min_gap + next_car.length
+                            min_pos = (next_car.pos[-1] - safe_gap) % L
+
+                            velnew[i] = 0
+                            posnew[i] = min_pos                                
+                            acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
+
+                        elif next_car.vel[-1] == 0 or velnew[index] == 0:
+
+                            safe_gap = car.min_gap + next_car.length
+                            min_pos = (next_car.pos[-1] - safe_gap) % L
+
+                            if car.pos[-1] < min_pos <= posnew[i] or car.pos[-1] >= min_pos > posnew[i]:
+                                velnew[i] = 0
+                                posnew[i] = min_pos
+                                acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
+                        else:
+                            velnew[i] = 0
+                            posnew[i] = (traffic_light.position - car.min_gap) % L
+                            distance = (traffic_light.position - car.pos[-1]) % L
+                            acc_new[i] = -car.vel[-1]**2 / (2 * distance)
+                    else:
+                        index = (i + 1) % len(cars)
+                        next_car = cars[index]
+
+                        if next_car.car_id == -1:
+                            index = (i + 2) % len(cars)
+                            next_car = cars[index]
+
+                        if ((car.pos[-1] - car.length) % L - next_car.pos[-1]) % L < car.max_comf_stopping_distance:
+                            safe_gap = car.min_gap + next_car.length
+                            min_pos = (next_car.pos[-1] - safe_gap) % L
+
+                            velnew[i] = 0
+                            posnew[i] = min_pos                                
+                            acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
+
+                        elif next_car.vel[-1] == 0 or velnew[index] == 0:
+
+                            safe_gap = car.min_gap + next_car.length
+                            min_pos = (next_car.pos[-1] - safe_gap) % L
+
+                            if car.pos[-1] < min_pos <= posnew[i] or car.pos[-1] >= min_pos > posnew[i]:
+                                velnew[i] = 0
+                                posnew[i] = min_pos
+                                acc_new[i] = -car.vel[-1]**2 / (2 * (min_pos - car.pos[-1]) % L)
+                                
                 # Ensure velocity does not go negative
                 if velnew[i] < 0:
                     velnew[i] = 0
@@ -213,7 +265,7 @@ class VehicleClass:
                 # Compute headway
                 car.headway.append(((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L)
 
-                if car.headway[-1] < car.min_gap:
+                if car.headway[-1] < car.min_gap and next_car.car_id != -1:
 
                     # Calculate desired bumper-to-bumper distance (s*)
                     s_star = 2

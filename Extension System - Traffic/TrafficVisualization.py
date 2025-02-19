@@ -1,12 +1,14 @@
 import tkinter as tk
 import random
 import math
+import time
 
 class TrafficVisualization:
     def __init__(self, car_objects, road_length, car_size, update_interval, traffic_light, scale_factor=5):
         self.root = tk.Tk()
         self.root.title("Traffic Simulation")
 
+        self.start_time = time.time()
         self.scale_factor = scale_factor
         self.road_radius = (road_length / (2 * math.pi)) * scale_factor
         self.car_size = car_size
@@ -31,6 +33,7 @@ class TrafficVisualization:
 
         # Start animation
         self.smooth_update()
+        self.update_traffic_light_loop()
         self.root.mainloop()
 
     def draw_road(self):
@@ -67,10 +70,22 @@ class TrafficVisualization:
             fill="red", outline="black"
         )
 
-    def update_traffic_light(self, current_time):
-        colors = {"red": "red", "orange": "orange", "green": "green"}
-        light_color = self.traffic_light.status(current_time) 
-        self.canvas.itemconfig(self.traffic_light_circle, fill=colors[light_color])
+    def update_traffic_light(self):
+        elapsed_time = time.time() - self.start_time
+        cycle_time = elapsed_time % 25
+
+        if cycle_time < 10:
+            light_color = "green"
+        elif cycle_time < 15:
+            light_color = "orange"
+        else:
+            light_color = "red"
+
+        self.canvas.itemconfig(self.traffic_light_circle, fill=light_color)
+    
+    def update_traffic_light_loop(self):
+        self.update_traffic_light()
+        self.root.after(1000, self.update_traffic_light_loop)
 
 
     def get_car_color(self, index):
