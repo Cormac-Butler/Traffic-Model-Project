@@ -120,9 +120,6 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     light_status = traffic_light.status(time_pass)
     traffic_light.time_in_state += time_step
 
-    if (traffic_light.time_in_state == traffic_light.green_duration and light_status == 'green') or (traffic_light.time_in_state == traffic_light.orange_duration and light_status == 'orange') or (traffic_light.time_in_state == traffic_light.red_duration and light_status == 'red'):
-        traffic_light.time_in_state = 0
-
     #'''
     # Add phantom car based on traffic light status
     if light_status == "red" and len(cars) == N:
@@ -147,7 +144,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
         for i, car in enumerate(cars):
             if car.car_id != -1 and ((car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L)):
 
-                s = det_point - car.pos[-2]
+                s = (det_point - car.pos[-2]) % L
                 
                 # Calculate delta t
                 if car.acc[-2] == 0:
@@ -156,13 +153,16 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
                     sqrt_term = car.vel[-2]**2 + 2 * car.acc[-2] * s
 
                     if sqrt_term < 0:
-                        print(car.car_id, sqrt_term, car.acc[-2], car.acc[-1])
+                        print(car.car_id, sqrt_term, car.acc[-2], car.acc[-1], car.vel[-2], s)
                     delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-2]
                     
                 # Store detection time and velocity
                 detect_time.append(time_pass + delta_t)
                 detect_vel.append(car.vel[-2] + car.acc[-2] * delta_t)
 
+    # Reset light time
+    if (traffic_light.time_in_state == traffic_light.green_duration and light_status == 'green') or (traffic_light.time_in_state == traffic_light.orange_duration and light_status == 'orange') or (traffic_light.time_in_state == traffic_light.red_duration and light_status == 'red'):
+        traffic_light.time_in_state = 0
     return cars, den, flo, detect_time, detect_vel
 
 
