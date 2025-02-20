@@ -31,7 +31,7 @@ if __name__ == "__main__":
     step_cars = 2
 
     # Define traffic light parameters
-    traffic_light = tl(100, 10, 0, 10, 0)
+    traffic_light = tl(100, 10, 5, 10)
 
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)

@@ -1,5 +1,5 @@
 import numpy as np
-from VehicleClass import VehicleClass as vc
+from newVehicle import VehicleClass as vc
 
 def init_simulation(N, L):
     np.random.seed(20)
@@ -116,11 +116,10 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     detect_time = []
     detect_vel = []
 
-    # Get traffic light status
-    light_status = traffic_light.status(time_pass)
-    traffic_light.time_in_state += time_step
+    # Update traffic light state
+    traffic_light.update(time_step)
 
-    #'''
+    '''
     # Add phantom car based on traffic light status
     if light_status == "red" and len(cars) == N:
         cars = add_phantom_car(cars, traffic_light, L)
@@ -128,10 +127,10 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     # Remove phantom car based on traffic light status
     elif light_status != 'red' and len(cars) > N:
         cars = remove_phantom_car(cars)
-    #'''
+    '''
 
     # Update positions and velocities
-    cars = vc.upd_pos_vel(cars, time_step, L, traffic_light, light_status, time_pass)
+    cars = vc.upd_pos_vel(cars, time_step, L, traffic_light)
 
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
@@ -161,8 +160,8 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
                 detect_vel.append(car.vel[-2] + car.acc[-2] * delta_t)
 
     # Reset light time
-    if (traffic_light.time_in_state == traffic_light.green_duration and light_status == 'green') or (traffic_light.time_in_state == traffic_light.orange_duration and light_status == 'orange') or (traffic_light.time_in_state == traffic_light.red_duration and light_status == 'red'):
-        traffic_light.time_in_state = 0
+    #if (traffic_light.time_in_state == traffic_light.green_duration and light_status == 'green') or (traffic_light.time_in_state == traffic_light.orange_duration and light_status == 'orange') or (traffic_light.time_in_state == traffic_light.red_duration and light_status == 'red'):
+    #    traffic_light.time_in_state = 0
     return cars, den, flo, detect_time, detect_vel
 
 

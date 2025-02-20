@@ -26,28 +26,108 @@ class VehicleClass:
         self.comf_decel = comf_decel
         self.acc_max = acc_max
         self.length = length
-    
-    def upd_pos_vel(cars, time_step, L):
 
+        self.comf_stopping_distance = -self.vel[-1] ** 2 / (-2 * self.comf_decel) if self.comf_decel > 0 else 0
+        self.max_comf_stopping_distance = -self.des_speed_inv ** 2 / (-2 * self.comf_decel) if self.comf_decel > 0 else 0
+
+    def check_car_ahead(car, i, cars, L, acc_new) -> None:
+        index = (i + 1) % len(cars)
+        next_car = cars[index]
+        
+        # Skip placeholder cars
+        if next_car.car_id == -1:
+            index = (i + 2) % len(cars)
+            next_car = cars[index]
+        
+        # If next car is stopped or too close
+        if next_car.vel[-1] < 0.1:
+            safe_gap = car.min_gap + next_car.length
+            distance_to_next = (next_car.pos[-1] - car.pos[-1]) % L
+            
+            if distance_to_next < car.comf_stopping_distance + safe_gap:
+                stop_distance = distance_to_next - safe_gap
+                if stop_distance > 0:
+                    decel = car.vel[-1]**2 / (2 * stop_distance)
+                    acc_new[i] = -min(decel, car.comf_decel)
+                else:
+                    acc_new[i] = -car.comf_decel
+                    
+    def handle_red_light(car, i, cars, dist_to_light, L, acc_new, traffic_light) -> None:
+
+        # If approaching the light and within stopping distance
+        if 0 < dist_to_light < car.comf_stopping_distance + car.length:
+            # Calculate deceleration needed to stop at light
+            if dist_to_light > car.min_gap:
+                stop_distance = dist_to_light - car.min_gap
+                if stop_distance > 0:
+                    decel = car.vel[-1]**2 / (2 * stop_distance)
+                    acc_new[i] = -min(decel, car.comf_decel)
+                else:
+                    acc_new[i] = -car.comf_decel
+            else:
+                # Already too close, emergency stop
+                acc_new[i] = -car.comf_decel
+        
+        # Check for stopped car ahead
+        VehicleClass.check_car_ahead(car, i, cars, L, acc_new)
+
+    def handle_orange_light(car, i, cars, dist_to_light, L, acc_new, traffic_light) -> None:
+
+        # Calculate time until red
+        time_till_red = traffic_light.orange_duration - traffic_light.time_in_state
+        
+        # If car can make it through before red
+        if dist_to_light < car.vel[-1] * time_till_red:
+
+            # Car can pass through safely, maintain speed
+            return
+        
+        # Otherwise, treat like red light - start slowing
+        if 0 < dist_to_light < car.comf_stopping_distance + car.length:
+            stop_distance = dist_to_light - car.min_gap
+            if stop_distance > 0:
+                decel = car.vel[-1]**2 / (2 * stop_distance)
+                acc_new[i] = -min(decel, car.comf_decel)
+            else:
+                acc_new[i] = -car.comf_decel
+        
+        # Check for stopped car ahead
+        VehicleClass.check_car_ahead(car, i, cars, L, acc_new)
+
+    
+    def upd_pos_vel(cars, time_step, L, traffic_light):
         posnew = np.zeros(len(cars))
         velnew = np.zeros(len(cars))
         acc_new = np.zeros(len(cars))
-
+        
+        light_status = traffic_light.status()
+        
+        # First pass: calculate base accelerations using IDM
         for i, car in enumerate(cars):
             if car.car_id != -1:
-
                 # Calculate desired bumper-to-bumper distance (s*)
-                s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
+                s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + 
+                                        (car.vel[-1] * car.dv[-1]) / 
+                                        (2 * np.sqrt(car.acc_max * car.comf_decel)))
 
                 # Calculate acceleration using IDM
-                acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
-
+                acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - 
+                                        (s_star / car.headway[-1])**2)
+        
+        # Second pass: handle traffic light logic
         for i, car in enumerate(cars):
-
             if car.car_id != -1:
-
-                # Update velocity and position
-                velnew[i] = car.vel[-1] + acc_new[i] * time_step
+                # Distance to traffic light (circular road)
+                dist_to_light = (traffic_light.position - car.pos[-1]) % L
+                
+                # Handle traffic light based on its state
+                if light_status == "red":
+                    VehicleClass.handle_red_light(car, i, cars, dist_to_light, L, acc_new, traffic_light)
+                elif light_status == "orange":
+                    VehicleClass.handle_orange_light(car, i, cars, dist_to_light, L, acc_new, traffic_light)
+                
+                # Calculate new velocity and position based on acceleration
+                velnew[i] = max(0, car.vel[-1] + acc_new[i] * time_step)
                 posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
                 # Ensure velocity does not go negative
@@ -70,7 +150,7 @@ class VehicleClass:
             car.vel.append(velnew[i])
 
         return cars
-
+    
     def update_cars(cars, N, L, time_step):
         
         for  i, car in enumerate(cars):
