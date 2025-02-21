@@ -30,11 +30,13 @@ class VehicleClass:
         self.comf_stopping_distance = -self.vel[-1] ** 2 / (-2 * self.comf_decel) if self.comf_decel > 0 else 0
         self.max_comf_stopping_distance = -self.des_speed_inv ** 2 / (-2 * self.comf_decel) if self.comf_decel > 0 else 0
 
-    def upd_pos_vel(cars, time_step, L, traffic_light, light_status, time_pass):
+    def upd_pos_vel(cars, time_step, L, traffic_light):
 
         posnew = np.zeros(len(cars))
         velnew = np.zeros(len(cars))
         acc_new = np.zeros(len(cars))
+
+        light_status = traffic_light.status()
 
         for i, car in enumerate(cars):
             if car.car_id != -1:
@@ -66,7 +68,7 @@ class VehicleClass:
                     velnew[i] = 0
                 
                 car.stopping_distance = - car.vel[-1]**2 / (-2 * car.comf_decel)
-        
+        '''
         for i, car in enumerate(cars): 
             if car.car_id != -1:
                 
@@ -203,7 +205,7 @@ class VehicleClass:
                 if velnew[i] < 0:
                     velnew[i] = 0
                                 
-        '''
+        
                 elif light_status == "orange":
 
                     # Calculate remaining time in the orange phase
@@ -260,7 +262,7 @@ class VehicleClass:
         for  i, car in enumerate(cars): 
 
             if car.car_id != -1:
-                next_car = cars[(i + 1) % N]
+                next_car = cars[(i + 1) % len(cars)]
                 
                 # Compute headway
                 car.headway.append(((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L)
@@ -268,7 +270,7 @@ class VehicleClass:
                 if car.headway[-1] < car.min_gap and next_car.car_id != -1:
 
                     # Calculate desired bumper-to-bumper distance (s*)
-                    s_star = 2
+                    s_star = car.min_gap
 
                     # Calculate acceleration using IDM
                     acc_new = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)

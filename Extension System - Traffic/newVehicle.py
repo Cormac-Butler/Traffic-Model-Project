@@ -160,7 +160,7 @@ class VehicleClass:
         
         for  i, car in enumerate(cars):
             if car.car_id != -1: 
-                next_car = cars[(i + 1) % N]
+                next_car = cars[(i + 1) % len(cars)]
                 
                 # Compute headway
                 if next_car.pos[-1] > next_car.length:
