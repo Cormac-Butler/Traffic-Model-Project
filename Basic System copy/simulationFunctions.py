@@ -50,15 +50,13 @@ def init_simulation(N, L):
             break
 
     # Calculate headway
-    for i in range(N - 1):
+    for i in range(N):
         next_car = (i + 1) % N
         headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
 
         car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
 
-    car = vc(N, 0, [200], [0], [0], [250 - cars[N-2].pos[-1]], [0], 0, accexp, 1, 2, 1.5, 1, 3)
-    cars.append(car)
     print(N, 'Cars initialised')
 
     return cars
@@ -89,7 +87,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
 
     # Update variables
     cars = vc.update_cars(cars, N, L, time_step)
-    
+
     # Detection and measurement logic (only for real cars)
     if time_pass > time_measure:
         den, flo = flow_global(N, [car.vel[-1] for car in cars], L)
@@ -175,4 +173,5 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
 
     print('Simulation for car total', N, 'completed')
 
+    print(min(cars[0].acc))
     return cars, glob_flow, glob_dens, loc_flow, loc_dens

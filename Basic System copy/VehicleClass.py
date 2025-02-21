@@ -34,31 +34,31 @@ class VehicleClass:
         acc_new = np.zeros(len(cars))
 
         for i, car in enumerate(cars):
-            if car.car_id != len(cars):
-                # Calculate desired bumper-to-bumper distance (s*)
-                s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
 
-                # Calculate acceleration using IDM
-                acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
+            # Calculate desired bumper-to-bumper distance (s*)
+            s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
+
+            # Calculate acceleration using IDM
+            acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
 
         for i, car in enumerate(cars):
-            if car.car_id != len(cars):
-                # Update velocity and position
-                velnew[i] = car.vel[-1] + acc_new[i] * time_step
-                posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
-                # Ensure velocity does not go negative
-                if velnew[i] <= 0:
+            # Update velocity and position
+            velnew[i] = car.vel[-1] + acc_new[i] * time_step
+            posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
-                    # Calculate time to stop
-                    if abs(acc_new[i]) > 1e-6:
-                        t_stop = -car.vel[-1] / acc_new[i]
-                    else:
-                        t_stop = 0
+            # Ensure velocity does not go negative
+            if velnew[i] <= 0:
 
-                    # Update position and velocity to stop at t_stop
-                    posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
-                    velnew[i] = 0
+                # Calculate time to stop
+                if acc_new[i] != 0:
+                    t_stop = -car.vel[-1] / acc_new[i]
+                else:
+                    t_stop = 0
+
+                # Update position and velocity to stop at t_stop
+                posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
+                velnew[i] = 0
         
         # Set new position and velocity values
         for i, car in enumerate(cars):
@@ -89,13 +89,16 @@ class VehicleClass:
                 velnew = car.vel[-1] + acc_new * time_step
 
                 # Ensure velocity does not go negative
-                if velnew <= 0:
+                if velnew < 0:
                     velnew = 0
                 
                 acc[i] = acc_new
                 car.vel[-1] = velnew
 
             car.acc.append(acc[i])
+        
+        for i, car in enumerate(cars):
+            next_car = cars[(i + 1) % N]
             car.dv.append(car.vel[-1] - next_car.vel[-1])
 
         return cars

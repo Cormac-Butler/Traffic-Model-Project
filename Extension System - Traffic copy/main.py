@@ -1,11 +1,12 @@
 import simulationFunctions as sf
 import multiprocessing as mp
+from TrafficLightClass import TrafficLightClass as tl
 import pickle
 
-def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length):
+def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length, traffic_light):
     
     # Run simulation
-    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length, traffic_light)
     
     # Compute average velocity (glob_avg_velocity, loc_avg_velocity)
     glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density != 0 else 0
@@ -17,9 +18,9 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 45
-    road_length = 300
-    steps = 1000 
+    max_cars = 15
+    road_length = 1000
+    steps = 1000  
     steps_before_measure = 100  
     speed_limit = 30  
     detection_point = road_length / 2  
@@ -29,19 +30,21 @@ if __name__ == "__main__":
     end_cars = max_cars
     step_cars = 2
 
+    # Define traffic light parameters
+    traffic_light = tl(100, 10, 5, 10)
+
     # List of car counts to simulate
     car_counts = range(start_cars, end_cars + step_cars, step_cars)
     cars = []
 
     # Parallel processing using multiprocessing Pool
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length) for N in car_counts])
+        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length, traffic_light) for N in car_counts])
 
     # Unpack results
     global_flow, local_flow = [], []
     global_density, local_density = [], []
     global_average_velocity, local_average_velocity = [], []
-    cars_positions = [0] * max_cars
 
     for _, carMax, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in results:
         global_flow.append(g_flow)
@@ -56,6 +59,7 @@ if __name__ == "__main__":
     
     # Organise data into a dictionary
     simulation_data = {
+        "traffic_light": traffic_light, 
         "cars_positions": cars_positions,
         "road_length": road_length,
         "global_density": global_density,
@@ -66,6 +70,6 @@ if __name__ == "__main__":
         "local_average_velocity": local_average_velocity
     }
 
-    # Save using pickle with highest protocol for speed optimization
-    with open('simulation_results_basic_system.pkl', 'wb') as file:
-        pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+    # Save to a pickle file
+    with open('simulation_results_traffic_extension.pkl', 'wb') as file:
+        pickle.dump(simulation_data, file,  protocol=pickle.HIGHEST_PROTOCOL)

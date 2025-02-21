@@ -27,10 +27,27 @@ class VehicleClass:
         self.acc_max = acc_max
         self.length = length
     
-    def upd_pos_vel(cars, time_step, L):
+    def update_cars(cars, time_step, L):
 
-        posnew = np.zeros(len(cars))
-        velnew = np.zeros(len(cars))
+        # Update acc based on IDM
+        acc_new = VehicleClass.calc_acc(cars)
+
+        # Update velocity and position
+        pos_new, vel_new = VehicleClass.upd_pos_vel(cars, time_step, acc_new)
+        
+        for i, car in enumerate(cars):
+
+            # Set new position and velocity values
+            car.acc.append(acc_new[i])
+            car.pos.append(pos_new[i] % L)
+            car.vel.append(vel_new[i])
+        
+        cars = VehicleClass.update_headway_dv(cars, L, time_step)
+            
+        return cars
+    
+    def calc_acc(cars):
+
         acc_new = np.zeros(len(cars))
 
         for i, car in enumerate(cars):
@@ -40,6 +57,14 @@ class VehicleClass:
 
             # Calculate acceleration using IDM
             acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
+        
+        # Set new acceleration value
+        return acc_new
+
+    def upd_pos_vel(cars, time_step, acc_new):
+
+        posnew = np.zeros(len(cars))
+        velnew = np.zeros(len(cars))
 
         for i, car in enumerate(cars):
 
@@ -51,7 +76,7 @@ class VehicleClass:
             if velnew[i] <= 0:
 
                 # Calculate time to stop
-                if abs(acc_new[i]) > 1e-6:
+                if acc_new[i] != 0:
                     t_stop = -car.vel[-1] / acc_new[i]
                 else:
                     t_stop = 0
@@ -61,18 +86,14 @@ class VehicleClass:
                 velnew[i] = 0
         
         # Set new position and velocity values
-        for i, car in enumerate(cars):
-            car.acc.append(acc_new[i])
-            car.pos.append(posnew[i] % L)
-            car.vel.append(velnew[i])
+        return posnew, velnew
 
-        return cars
-
-    def update_cars(cars, N, L, time_step):
+    def update_headway_dv(cars, L, time_step):
+        
         acc = [car.acc[-1] for car in cars]
         
         for  i, car in enumerate(cars): 
-            next_car = cars[(i + 1) % N]
+            next_car = cars[(i + 1) % len(cars)]
             
             # Compute headway
             car.headway.append(((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L)
@@ -89,13 +110,16 @@ class VehicleClass:
                 velnew = car.vel[-1] + acc_new * time_step
 
                 # Ensure velocity does not go negative
-                if velnew <= 0:
+                if velnew < 0:
                     velnew = 0
                 
                 acc[i] = acc_new
                 car.vel[-1] = velnew
 
             car.acc.append(acc[i])
+        
+        for i, car in enumerate(cars):
+            next_car = cars[(i + 1) % len(cars)]
             car.dv.append(car.vel[-1] - next_car.vel[-1])
 
         return cars
