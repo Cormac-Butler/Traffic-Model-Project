@@ -10,8 +10,8 @@ def init_simulation(N, L):
     min_gap = 2
     acc_exp = 4
     des_speed = 30
-    time_gap = 1.5
-    comf_decel = 1
+    time_gap = 1
+    comf_decel = 1.5
     acc_max = 1
     speedlim = des_speed
 
@@ -77,7 +77,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
     # Update headway and dv
     for i in range(N):
         next_car = cars[(i + 1) % N]
-        cars[i].headway = (next_car.pos[-1] - next_car.length - cars[i].pos[-1]) % L
+        cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         cars[i].dv = cars[i].vel - next_car.vel
 
     # Calculate new accelerations
@@ -101,10 +101,12 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
     # Prevent overtaking or crashing
     for i in range(N):
         next_car = cars[(i + 1) % N]
-        headway = (next_car.pos[-1] - next_car.length - cars[i].pos[-1]) % L
+        headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         if headway < 0:
             cars[i].vel = 0
-            cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
+
+            # Already was told not to edit position
+            cars[i].pos[-1] = ((next_car.pos[-1] - next_car.length) % L - cars[i].min_gap) % L
 
     # Measurement variables
     den = 0

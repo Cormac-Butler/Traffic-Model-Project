@@ -12,7 +12,7 @@ def init_simulation(N, L):
     length = [3] *  N
     min_gap = [2] * N
     accexp = 4
-    desSpeed = 30
+    desSpeed = 70 * 2.237
 
     # Calculate initial positions with min_gap
     for i in range(N):
@@ -29,15 +29,11 @@ def init_simulation(N, L):
             # Next car index
             j = (i + 1) % N 
 
-            min_safe_gap = min_gap[i]
+            min_safe_gap = min_gap[i] + length[j]
 
             # Compute headway
-            if pos[j] - length[j] >= pos[i]:
-                headway = pos[j] - pos[i] - length[j]
-               
-            else:
-                headway = (pos[j] - length[j] + L - pos[i])
-                
+            headway = ((pos[j] - length[j]) % L - pos[i]) % L
+            
             # Ensure minimum gap is maintained
             if headway < min_safe_gap:
                 
@@ -69,7 +65,7 @@ def flow_global(N, velnew, L):
     dens = N / (L / 1000)
 
     # Calculate global flow (cars per hour)
-    flow = np.mean(velnew) * dens * (3600 / 1000)
+    flow = np.mean(velnew) * dens * 3.6
 
     return dens, flow
 

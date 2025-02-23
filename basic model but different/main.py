@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     # Model parameters
     max_cars = 60
-    road_length = 400
+    road_length = 300
     steps = 10000
     steps_before_measure = 100
     speed_limit = 30
