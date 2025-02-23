@@ -10,8 +10,8 @@ def init_simulation(N, L):
     min_gap = 2
     acc_exp = 4
     des_speed = 30
-    time_gap = 1
-    comf_decel = 1.5
+    time_gap = 1.5
+    comf_decel = 1
     acc_max = 1
     speedlim = des_speed
 
@@ -104,9 +104,6 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
         headway = (next_car.pos[-1] - next_car.length - cars[i].pos[-1]) % L
         if headway < 0:
             cars[i].vel = 0
-
-            # We got told not to update position for this
-            # Andrew said introduce a slowing feature
             cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
 
     # Measurement variables
