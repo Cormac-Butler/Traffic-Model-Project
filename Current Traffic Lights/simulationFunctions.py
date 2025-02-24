@@ -1,8 +1,9 @@
 import numpy as np
 from VehicleClass import VehicleClass as vc
 from TrafficLightClass import TrafficLightClass as tl
+
 def init_simulation(N, L):
-    np.random.seed(20)
+
     cars = []
     lane = 0
     initial_vel = 0
@@ -40,8 +41,6 @@ def init_simulation(N, L):
     print(N, 'Cars initialised')
     return cars
 
-
-
 def add_phantom_car(cars, traffic_light, L):
 
     # Get the traffic light position
@@ -59,7 +58,6 @@ def add_phantom_car(cars, traffic_light, L):
         # Check if car can make it through
         s = (light_pos - cars_before[i].pos[-1])
 
-        
         max_s = cars[i].vel * traffic_light.orange_duration
 
         if s < max_s:
@@ -86,9 +84,6 @@ def remove_phantom_car(cars, L):
     cars = [car for car in cars if car.car_id != -1]
 
     return cars
-
-
-
 
 def flow_global(N, velocities, L):
 
