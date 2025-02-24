@@ -28,7 +28,7 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-results = load_results('simulation_results_basic_system.pkl')
+results = load_results('simulation_results_traffic_lights_system.pkl')
 data = {key: results.get(key, []) for key in ['cars_positions', 'road_length', 'global_density', 'global_flow', 
                                               'local_density', 'local_flow', 'global_average_velocity', 'local_average_velocity']}
 
@@ -41,7 +41,7 @@ plot_scatter(axes1[1, 0], data['local_density'], data['local_flow'], 'Density (c
 plot_scatter(axes1[1, 1], data['local_density'], data['local_average_velocity'], 'Density (cars/km)', 'Average Velocity (m/s)', 'Local Avg Velocity vs. Density', 'red')
 plot_scatter(axes1[1, 2], data['local_flow'], data['local_average_velocity'], 'Flow (cars/hour)', 'Average Velocity (m/s)', 'Local Flow vs. Velocity', 'red')
 plt.tight_layout()
-plt.savefig('graph1.png')
+plt.savefig('graph3.png')
 
 # Second figure: LOWESS plots
 fig2, axes2 = plt.subplots(3, 2, figsize=(12, 12))
@@ -52,7 +52,7 @@ plot_best_fit_lowess(axes2[1, 1], data['global_density'], data['global_average_v
 plot_best_fit_lowess(axes2[2, 0], data['local_density'], data['local_average_velocity'], 'Density (cars/km)', 'Average Velocity (m/s)', 'Local Avg Velocity vs. Density', 'red')
 axes2[2, 1].axis('off')
 plt.tight_layout()
-plt.savefig('graph2.png')
+plt.savefig('graph4.png')
 
 # Visualization
 tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 250, 5)
