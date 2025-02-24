@@ -52,8 +52,10 @@ class VehicleClass:
 
         for i, car in enumerate(cars):
 
+            if len(cars) == 60 and i == 58:
+                ...
             # Calculate desired bumper-to-bumper distance (s*)
-            s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5))
+            s_star = car.min_gap + max(0, car.vel[-1] * car.time_gap + (car.vel[-1] * car.dv[-1]) / (2 * (car.acc_max * car.comf_decel)**0.5)) if car.acc_max > 0 else 0
 
             # Calculate acceleration using IDM
             acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
@@ -69,7 +71,6 @@ class VehicleClass:
         for i, car in enumerate(cars):
 
             # Update velocity and position
-            t_stop = 0
             velnew[i] = car.vel[-1] + acc_new[i] * time_step
             posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
@@ -83,8 +84,7 @@ class VehicleClass:
                     t_stop = 0
 
                 velnew[i] = car.vel[-1] + acc_new[i] * t_stop
-
-            posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
+                posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
         
         # Set new position and velocity values
         return posnew, velnew
@@ -94,6 +94,9 @@ class VehicleClass:
         acc = [car.acc[-1] for car in cars]
         
         for  i, car in enumerate(cars): 
+
+            if len(cars) == 60 and i == 58:
+                ...
             next_car = cars[(i + 1) % len(cars)]
             
             # Compute headway
@@ -101,32 +104,35 @@ class VehicleClass:
             
             if headway < car.min_gap:
 
+                if len(cars) == 60:
+                    ...
                 # Calculate desired bumper-to-bumper distance (s*)
                 s_star = car.min_gap
 
                 # Calculate acceleration using IDM
-                acc_new = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
+                acc_new = car.acc_max * (1 - (car.vel[-2] * car.des_speed_inv)**car.acc_exp - (s_star / (headway))**2)
                 
                 # Update velocity and position
-                velnew = car.vel[-1] + acc_new * time_step
+                velnew = car.vel[-2] + acc_new * time_step
 
                 # Ensure velocity does not go negative
                 if velnew < 0:
 
                     # Calculate time to stop
                     if acc_new != 0:
-                        t_stop = -car.vel[-1] / acc_new
+                        t_stop = -car.vel[-2] / acc_new
                     else:
                         t_stop = 0
 
                     #posnew = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new * t_stop**2
-                    velnew = car.vel[-1] + acc_new * t_stop
+                    velnew = car.vel[-2] + acc_new * t_stop
                     #car.pos[-1] = posnew % L
                 
                 acc[i] = acc_new
                 car.vel[-1] = velnew
 
             car.acc.append(acc[i])
+            
         
         for i, car in enumerate(cars):
             next_car = cars[(i + 1) % len(cars)]

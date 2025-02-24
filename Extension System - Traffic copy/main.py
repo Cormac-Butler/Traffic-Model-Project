@@ -18,11 +18,10 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
     
     # Model parameters
-    max_cars = 15
-    road_length = 1000
+    max_cars = 60
+    road_length = 500
     steps = 1000  
-    steps_before_measure = 100  
-    speed_limit = 30  
+    steps_before_measure = 100 
     detection_point = road_length / 2  
     time_step = 0.5
 

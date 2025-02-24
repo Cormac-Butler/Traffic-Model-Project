@@ -33,10 +33,12 @@ def init_simulation(N, L):
             break
 
     # Create cars
-    for i in range(N):
+    for i in range(N - 1):
         car = vc(i, lane, pos[i], initial_vel, speedlim, acc_exp, time_gap, min_gap, comf_decel, acc_max, length)
         cars.append(car)
 
+    car = vc(i, lane, pos[i], initial_vel, 0, 1, time_gap, min_gap, comf_decel, 0, length)
+    cars.append(car)
     print(N, 'Cars initialised')
     return cars
 
@@ -79,9 +81,6 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
         next_car = cars[(i + 1) % N]
         cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         cars[i].dv = cars[i].vel - next_car.vel
-        
-        if i == 59:
-            cars[i].des_speed = 0
 
     # Calculate new accelerations
     acc_new = np.zeros(N)

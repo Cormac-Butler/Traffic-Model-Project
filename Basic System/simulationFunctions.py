@@ -5,11 +5,11 @@ def init_simulation(N, L):
     np.random.seed(20)
     cars = []
     lane = 0
-    vel = [0]
-    acc = [0]
+    vel = [0] * N
+    acc = [0] * N
     pos = np.zeros(N)
-    dv = [0]
-    length = [4] *  N
+    dv = [0] * N
+    length = [5] *  N
     min_gap = [2] * N
     accexp = 4
     desSpeed = 70 / 2.3
@@ -46,12 +46,15 @@ def init_simulation(N, L):
             break
 
     # Calculate headway
-    for i in range(N):
+    for i in range(N-1):
         next_car = (i + 1) % N
         headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
 
-        car = vc(i, lane, [pos[i]], vel, acc, headway, dv, desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
+        car = vc(i, lane, [pos[i]], [vel[i]], [acc[i]], headway, [dv[i]], desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
+    
+    car = vc(i, lane, [pos[i]], [0], [0], headway, [dv[i]], 0, 0, 1, min_gap[i], 1.5, 0, length[i])
+    cars.append(car)
 
     print(N, 'Cars initialised')
 
