@@ -3,7 +3,7 @@ import random
 import math
 
 class TrafficVisualization:
-    def __init__(self, car_objects, road_length, car_size, update_interval, scale_factor=5):
+    def __init__(self, car_objects, road_length, car_size, update_interval, scale_factor = 0.5):
         self.root = tk.Tk()
         self.root.title("Traffic Simulation")
 

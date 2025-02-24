@@ -1,22 +1,24 @@
 import numpy as np
 from VehicleClass import VehicleClass as vc
 
-def init_simulation(N, L):
-    np.random.seed(20)
-    cars = []
-    lane = 0
-    vel = [0] * N
-    acc = [0] * N
-    pos = np.zeros(N)
-    dv = [0] * N
-    length = [5] *  N
-    min_gap = [2] * N
-    accexp = 4
-    desSpeed = 70 / 2.3
+def init_simulation(N, L,):
 
-    # Calculate initial positions with min_gap
+    cars = []
+    initial_vel = 0
+    initial_acc = 0
+    dv = 0
+    length = 5
+    min_gap = 2
+    acc_exp = 4
+    time_gap = 1
+    comf_decel = 1.5
+    acc_max = 1
+    speed_limit = 70 / 2.237
+
+    # Set initial positions
+    pos = np.zeros(N)
     for i in range(N):
-        pos[i] = (i) * (length[i] + min_gap[i])
+        pos[i] = i * (length + min_gap)
 
     # Ensure the minimum gap is maintained
     while True:
@@ -25,119 +27,152 @@ def init_simulation(N, L):
 
         # Loop to adjust positions
         for i in range(N):
-            
-            # Next car index
-            j = (i + 1) % N 
 
-            min_safe_gap = min_gap[i]
+            # Next car index
+            j = (i + 1) % N
 
             # Compute headway
-            headway = ((pos[j] - length[j]) % L - pos[i]) % L
-            
+            headway = ((pos[j] - length) % L - pos[i]) % L
+
             # Ensure minimum gap is maintained
-            if headway < min_safe_gap:
-                
+            if headway < min_gap:
+
                 changes = True
 
                 # Move the car back to maintain the minimum gap
-                pos[i] = (pos[j] - length[j] - min_safe_gap) % L
-        
+                pos[i] = ((pos[j] - length) % L - min_gap) % L
+
         if not changes:
             break
 
-    # Calculate headway
-    for i in range(N + 1):
-        next_car = (i + 1) % N
-        headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
+    # Create cars
+    for i in range(N - 1):
 
-        car = vc(i, lane, [pos[i]], [vel[i]], [acc[i]], headway, [dv[i]], desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
+        next_car = (i + 1) % N
+        headway = ((pos[next_car] - length) - pos[i]) % L
+
+        car = vc(i, pos[i], initial_vel, initial_acc, headway, dv, speed_limit, acc_exp, time_gap, min_gap, comf_decel, acc_max, length)
         cars.append(car)
 
     print(N, 'Cars initialised')
-
     return cars
 
-
-
-def flow_global(N, velnew, L):
+def flow_global(N, velocities, L):
 
     # Calculate global density (cars per km)
     dens = N / (L / 1000)
 
+    # Calculate avergae velocity
+    avg_vel = np.mean(velocities)
+
     # Calculate global flow (cars per hour)
-    flow = np.mean(velnew) * dens * 3.6
+    flow = dens * avg_vel * 3.6
 
     return dens, flow
 
-
-
-def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
-
-    den = 0
-    flo = 0
-    detect_time = []
-    detect_vel = []
-
-    # Update cars
-    cars = vc.update_cars(cars, time_step, L)
-    
-    # Detection and measurement logic (only for real cars)
-    if time_pass > time_measure:
-        den, flo = flow_global(N, [car.vel[-1] for car in cars], L)
-
-        # Detection loop for local measurements
-        for i, car in enumerate(cars):
-            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and car.pos[-2] < det_point <= car.pos[-1] + L):
-
-                s = det_point - car.pos[-2]
-
-                # Calculate delta t
-                if car.acc[-2] == 0:
-                    delta_t = s / car.vel[-2]
-                else:
-                    sqrt_term = car.vel[-2]**2 + 2 * car.acc[-2] * s
-                    delta_t = (-car.vel[-2] + np.sqrt(sqrt_term)) / car.acc[-2]
-                    
-                # Store detection time and velocity
-                detect_time.append(time_pass + delta_t)
-                detect_vel.append(car.vel[-2] + car.acc[-2] * delta_t)
-    
-    return cars, den, flo, detect_time, detect_vel
-
-
-
 def analyse_global(track_flow, track_dens):
-    
+
     # Calculate overall global flow and density
     glob_flow = np.mean(track_flow)
     glob_dens = np.mean(track_dens)
 
     return glob_flow, glob_dens
 
-
-
 def analyse_local(track_det_time, track_det_vel, time):
 
     # Avoid division by zero if no detection data
     if not track_det_time or not track_det_vel:
-        return 0, 0 
+        return 0, 0
     
     num_cars = len(track_det_time)
-    
+
     # Calculate local flow
     loc_flow = (num_cars / time) * 3600
 
     # Calculate local density
     avg_speed = sum(track_det_vel) / num_cars
-
     loc_dens = loc_flow / (avg_speed * 3.6)
 
     return loc_flow, loc_dens
 
+def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
 
+    # Measurement variables
+    den = 0
+    flo = 0
+    detect_time = []
+    detect_vel = []
+
+    '''
+    # Store previous velocity and acceleration
+    for car in cars:
+        car.prev_vel = car.vel
+        car.prev_acc = car.acc
+
+    # Update headway and dv
+    for i in range(N):
+        next_car = cars[(i + 1) % N]
+        cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
+        cars[i].dv = cars[i].vel - next_car.vel
+
+    # Calculate new accelerations
+    acc_new = np.zeros(N)
+    for i, car in enumerate(cars):
+        s_star = car.min_gap + max(0, car.vel * car.time_gap + (car.vel * car.dv) / (2 * np.sqrt(car.acc_max * car.comf_decel)))
+        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2)
+
+    # Update velocities and positions
+    for i, car in enumerate(cars):
+
+        vel_new = car.vel + acc_new[i] * time_step
+        t = time_step
+        if vel_new < 0:
+            t  = - car.vel / acc_new[i]
+            vel_new = car.vel + acc_new[i] * t
+
+        pos_new = (car.pos[-1] + car.vel * t + 0.5 * acc_new[i] * t**2) % L
+        car.acc = acc_new[i]
+        car.vel = vel_new
+        car.pos.append(pos_new)
+
+    # Prevent overtaking or crashing
+    for i in range(N):
+        next_car = cars[(i + 1) % N]
+        headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
+        if headway < car.min_gap / 2:
+            cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
+    '''
+
+    cars = vc.update_cars(cars, time_step, L)
+
+    # Take measurements
+    if time_pass > time_measure:
+        den, flo = flow_global(N, [car.vel for car in cars], L)
+
+        # Detection loop for local measurements
+        for i, car in enumerate(cars):
+
+            if (car.pos[-2] < det_point <= car.pos[-1]) or (car.pos[-1] < car.pos[-2] and (car.pos[-2] < det_point <= car.pos[-1] + L)):
+
+                # Calculate distance from initial position to detection point
+                s = det_point - car.pos[-2]
+
+                # Calculate delta t
+                if car.prev_acc == 0:
+                    delta_t = s / car.prev_vel if car.prev_vel != 0 else 0
+                else:
+                    sqrt_term = car.prev_vel**2 + 2 * car.prev_acc * s
+                    delta_t = (-car.prev_vel + np.sqrt(sqrt_term)) / car.prev_acc
+
+                # Store detection time and velocity
+                detect_time.append(time_pass - time_step + delta_t)
+                detect_vel.append(car.prev_vel + car.prev_acc * delta_t)
+
+    return cars, den, flo, detect_time, detect_vel
 
 def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
 
+    # Declare variables
     track_flow = []
     track_dens = []
     track_det_time = []
@@ -150,16 +185,13 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
 
         time_pass = i * time_step
 
-        if time_pass > steps_measure * time_step:
-            cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, time_step)
+        cars, den, flo, detect_time, detect_vel = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, time_step)
 
+        if time_pass > steps_measure * time_step:
             track_flow.append(flo)
             track_dens.append(den)
-
             track_det_time.extend(detect_time)
             track_det_vel.extend(detect_vel)
-        else:
-            cars, den, flo, _, _ = Step(N, cars, time_pass, steps_measure * time_step, det_point, L, time_step)
 
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)
