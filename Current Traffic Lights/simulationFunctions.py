@@ -51,9 +51,9 @@ def add_phantom_car(cars, traffic_light, L):
     cars_after = [car for car in cars if car.pos[-1] >= light_pos]
     
     # Create phantom car at traffic light position
-    phantom_car = vc(-1, 0, [light_pos], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    phantom_car = vc(-1, 0, [light_pos], 0, 0, 0, 0, 0, 0, 0, 0)
 
-    for i in range(len(cars_before), -1, -1):
+    for i in range(len(cars_before ) - 1, -1, -1):
 
         # Check if car can make it through
         s = (light_pos - cars_before[i].pos[-1])
@@ -69,9 +69,6 @@ def add_phantom_car(cars, traffic_light, L):
             else:
                 cars_before.insert(i + 1, phantom_car)
             break
-
-    # Create phantom car at traffic light position
-    phantom_car = vc(-1, 0, [light_pos], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
     
     # Insert phantom car in the correct position
     new_cars = cars_before + cars_after
@@ -114,11 +111,13 @@ def analyse_local(track_det_time, track_det_vel, time):
 
 def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_light):
 
+    # Update traffic light state
+    traffic_light.update(time_step)
     
     light_state = traffic_light.status()
 
     if light_state == 'orange':
-        cars = add_phantom_car(cars, light_state, L)
+        cars = add_phantom_car(cars, traffic_light, L)
     elif light_state == 'green':
         cars = remove_phantom_car(cars, L)
         
@@ -128,17 +127,19 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
         car.prev_acc = car.acc
 
     # Update headway and dv
-    for i in range(N):
-        next_car = cars[(i + 1) % N]
+    for i in range(len(cars)):
+        next_car = cars[(i + 1) % len(cars)]
+        print(next_car.length)
+        print(next_car.pos[-1])
         cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         cars[i].dv = cars[i].vel - next_car.vel
 
 
     # Calculate new accelerations
-    acc_new = np.zeros(N)
+    acc_new = np.zeros(len(cars))
     for i, car in enumerate(cars):
         s_star = car.min_gap + max(0, car.vel * car.time_gap + (car.vel * car.dv) / (2 * np.sqrt(car.acc_max * car.comf_decel)))
-        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2)
+        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2) if car.des_speed > 0 else 0
 
     # Update velocities and positions
     for i, car in enumerate(cars):
@@ -147,8 +148,8 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
         t = time_step
         if vel_new < 0:
             t  = - car.vel / acc_new[i]
-            vel_new = 0
-            #vel_new = car.vel + acc_new[i] * t
+            #vel_new = 0
+            vel_new = car.vel + acc_new[i] * t
 
         pos_new = (car.pos[-1] + car.vel * t + 0.5 * acc_new[i] * t**2) % L
         car.acc = acc_new[i]
@@ -156,8 +157,8 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
         car.pos.append(pos_new)
 
     # Prevent overtaking or crashing
-    for i in range(N):
-        next_car = cars[(i + 1) % N]
+    for i in range(len(cars)):
+        next_car = cars[(i + 1) % len(cars)]
         headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         if headway < 0:
             cars[i].vel = 0
@@ -189,7 +190,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
 
 def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L):
 
-    traffic_light = tl(150, 10, 5, 10)
+    traffic_light = tl(150, 100, 10, 100)
     track_flow = []
     track_dens = []
     track_det_time = []

@@ -97,7 +97,9 @@ class VehicleClass:
 
             if len(cars) == 60 and i == 58:
                 ...
-            next_car = cars[(i + 1) % len(cars)]
+            
+            index = (i + 1) % len(cars) 
+            next_car = cars[index]
             
             # Compute headway
             headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L

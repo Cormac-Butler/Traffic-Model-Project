@@ -46,15 +46,12 @@ def init_simulation(N, L):
             break
 
     # Calculate headway
-    for i in range(N-1):
+    for i in range(N + 1):
         next_car = (i + 1) % N
         headway = [(pos[next_car] - pos[i] - length[next_car]) % L]
 
         car = vc(i, lane, [pos[i]], [vel[i]], [acc[i]], headway, [dv[i]], desSpeed, accexp, 1, min_gap[i], 1.5, 1, length[i])
         cars.append(car)
-    
-    car = vc(i, lane, [pos[i]], [0], [0], headway, [dv[i]], 0, 0, 1, min_gap[i], 1.5, 0, length[i])
-    cars.append(car)
 
     print(N, 'Cars initialised')
 
