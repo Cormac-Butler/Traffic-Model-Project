@@ -104,4 +104,4 @@ plt.tight_layout()
 plt.savefig('graph.png')
 
 # Create visualisation
-tv.TrafficVisualization(cars, road_length, 5, 250, 5)
+#tv.TrafficVisualization(cars, road_length, 5, 250, 5)

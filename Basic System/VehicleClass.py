@@ -57,7 +57,7 @@ class VehicleClass:
 
             # Calculate acceleration using IDM
             acc_new[i] = car.acc_max * (1 - (car.vel[-1] * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway[-1]))**2)
-        
+
         # Set new acceleration value
         return acc_new
 
@@ -69,21 +69,22 @@ class VehicleClass:
         for i, car in enumerate(cars):
 
             # Update velocity and position
+            t_stop = 0
             velnew[i] = car.vel[-1] + acc_new[i] * time_step
             posnew[i] = car.pos[-1] + car.vel[-1] * time_step + 0.5 * acc_new[i] * time_step**2
 
             # Ensure velocity does not go negative
-            if velnew[i] <= 0:
-
+            if velnew[i] < 0:
+        
                 # Calculate time to stop
                 if acc_new[i] != 0:
                     t_stop = -car.vel[-1] / acc_new[i]
                 else:
                     t_stop = 0
 
-                # Update position and velocity to stop at t_stop
-                posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
-                velnew[i] = 0
+                velnew[i] = car.vel[-1] + acc_new[i] * t_stop
+
+            posnew[i] = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new[i] * t_stop**2
         
         # Set new position and velocity values
         return posnew, velnew
@@ -96,9 +97,9 @@ class VehicleClass:
             next_car = cars[(i + 1) % len(cars)]
             
             # Compute headway
-            car.headway.append(((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L)
+            headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
             
-            if car.headway[-1] < car.min_gap:
+            if headway < car.min_gap:
 
                 # Calculate desired bumper-to-bumper distance (s*)
                 s_star = car.min_gap
@@ -111,7 +112,16 @@ class VehicleClass:
 
                 # Ensure velocity does not go negative
                 if velnew < 0:
-                    velnew = 0
+
+                    # Calculate time to stop
+                    if acc_new != 0:
+                        t_stop = -car.vel[-1] / acc_new
+                    else:
+                        t_stop = 0
+
+                    #posnew = car.pos[-1] + car.vel[-1] * t_stop + 0.5 * acc_new * t_stop**2
+                    velnew = car.vel[-1] + acc_new * t_stop
+                    #car.pos[-1] = posnew % L
                 
                 acc[i] = acc_new
                 car.vel[-1] = velnew
@@ -120,6 +130,9 @@ class VehicleClass:
         
         for i, car in enumerate(cars):
             next_car = cars[(i + 1) % len(cars)]
+            headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
+
+            car.headway.append(headway)
             car.dv.append(car.vel[-1] - next_car.vel[-1])
 
         return cars

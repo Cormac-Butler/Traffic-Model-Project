@@ -9,10 +9,10 @@ def init_simulation(N, L):
     acc = [0]
     pos = np.zeros(N)
     dv = [0]
-    length = [3] *  N
+    length = [4] *  N
     min_gap = [2] * N
     accexp = 4
-    desSpeed = 70 * 2.237
+    desSpeed = 70 / 2.3
 
     # Calculate initial positions with min_gap
     for i in range(N):
@@ -29,7 +29,7 @@ def init_simulation(N, L):
             # Next car index
             j = (i + 1) % N 
 
-            min_safe_gap = min_gap[i] + length[j]
+            min_safe_gap = min_gap[i]
 
             # Compute headway
             headway = ((pos[j] - length[j]) % L - pos[i]) % L
@@ -40,7 +40,7 @@ def init_simulation(N, L):
                 changes = True
 
                 # Move the car back to maintain the minimum gap
-                pos[i] = (pos[j] - min_safe_gap) % L
+                pos[i] = (pos[j] - length[j] - min_safe_gap) % L
         
         if not changes:
             break
