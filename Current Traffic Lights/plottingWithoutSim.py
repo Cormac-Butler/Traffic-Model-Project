@@ -28,7 +28,7 @@ def plot_best_fit_lowess(ax, x, y, xlabel, ylabel, title, color):
     ax.legend()
     ax.grid()
 
-results = load_results('simulation_results_basic_system.pkl')
+results = load_results('simulation_results_traffic_lights_system.pkl')
 data = {key: results.get(key, []) for key in ['cars_positions', 'road_length', 'global_density', 'global_flow', 
                                               'local_density', 'local_flow', 'global_average_velocity', 'local_average_velocity']}
 

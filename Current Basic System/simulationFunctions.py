@@ -2,7 +2,7 @@ import numpy as np
 from VehicleClass import VehicleClass as vc
 
 def init_simulation(N, L):
-    np.random.seed(20)
+
     cars = []
     lane = 0
     initial_vel = 0
@@ -79,15 +79,12 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
         next_car = cars[(i + 1) % N]
         cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         cars[i].dv = cars[i].vel - next_car.vel
-        
-        if i == 59:
-            cars[i].des_speed = 0
 
     # Calculate new accelerations
     acc_new = np.zeros(N)
     for i, car in enumerate(cars):
         s_star = car.min_gap + max(0, car.vel * car.time_gap + (car.vel * car.dv) / (2 * np.sqrt(car.acc_max * car.comf_decel)))
-        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2) if car.des_speed > 0 else 0
+        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2)
 
     # Update velocities and positions
     for i, car in enumerate(cars):
@@ -108,12 +105,8 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
         next_car = cars[(i + 1) % N]
         headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
         if headway < car.min_gap / 2:
-            cars[i].vel = 0
-            #cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
+            cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
     
-    if headway < 0:
-        print(car.headway)
-
     # Measurement variables
     den = 0
     flo = 0

@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "local_average_velocity": local_average_velocity
     }
 
-    with open('simulation_results_basic_system.pkl', 'wb') as file:
+    with open('simulation_results_traffic_lights_system.pkl', 'wb') as file:
         pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("File writing complete.")
