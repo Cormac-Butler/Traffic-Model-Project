@@ -1,10 +1,11 @@
 import simulationFunctions as sf
 import multiprocessing as mp
 import pickle
+import numpy as np
 
-def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length):
+def run_simulation(N, time_step, steps, steps_before_measure, detection_point, road_length, green_duration):
 
-    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length)
+    cars, glob_flow, glob_density, loc_flow, loc_dens = sf.Simulate_IDM(N, time_step, steps, steps_before_measure, detection_point, road_length, green_duration)
 
     glob_avg_velocity = (glob_flow * 1000) / (glob_density * 3600) if glob_density != 0 else 0
     loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600) if loc_dens != 0 else 0
@@ -14,24 +15,17 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
 
     # Model parameters
-    max_cars = 60
+    number_of_cars = 60
     road_length = 500
     steps = 10000
     steps_before_measure = 100
     detection_point = road_length / 2
     time_step = 0.5
-
-    # Simulation steps
-    start_cars = 2
-    end_cars = max_cars
-    step_cars = 2
-
-    # List of car counts to simulate
-    car_counts = range(start_cars, end_cars + step_cars, step_cars)
+    green_duration = np.linspace(0,100, 60)
 
     # Run simulations
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(run_simulation, [(N, time_step, steps, steps_before_measure, detection_point, road_length) for N in car_counts])
+        results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, green_duration) for green_duration in green_duration])
 
     # Write data to file
     print("Writing file...")
@@ -59,7 +53,8 @@ if __name__ == "__main__":
         "local_density": local_density,
         "local_flow": local_flow,
         "global_average_velocity": global_average_velocity,
-        "local_average_velocity": local_average_velocity
+        "local_average_velocity": local_average_velocity,
+        "green_durations": green_duration
     }
 
     # Save using pickle with highest protocol for speed optimisation

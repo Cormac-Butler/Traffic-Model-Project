@@ -50,7 +50,7 @@ class VehicleClass:
 
                 # Calculate acceleration using IDM
                 acc_new[i] = car.acc_max * (1 - (car.vel * car.des_speed_inv)**car.acc_exp - (s_star / (car.headway))**2)
-
+                
         # Set new acceleration value
         return acc_new
     
