@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # Run simulations
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, green_duration) for green_duration in green_duration])
+        results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, gd) for gd in green_duration])
 
     # Write data to file
     print("Writing file...")

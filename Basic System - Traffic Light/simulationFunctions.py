@@ -95,6 +95,7 @@ def analyse_local(track_det_time, track_det_vel, time):
 
     return loc_flow, loc_dens
 
+'''
 def add_phantom_car(cars, traffic_light, L):
 
     # Get the traffic light position
@@ -141,6 +142,61 @@ def remove_phantom_car(cars, L):
     cars.sort(key=lambda car: car.pos[-1])
 
     return new_cars
+'''
+
+def add_phantom_car(cars, traffic_light, L):
+    light_pos = traffic_light.position
+    phantom_car = vc(-1, light_pos, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5)
+    
+    # Find the car immediately behind the traffic light
+    insertion_idx = None
+    affected_car = None
+    
+    for i, car in enumerate(cars):
+
+        s_max = car.vel * traffic_light.orange_duration
+
+        if (car.pos[-1] + s_max) % L < light_pos:
+            insertion_idx = i + 1
+            affected_car = car
+
+            # Break at the last car before the light
+            if insertion_idx == len(cars) or cars[insertion_idx].pos[-1] > light_pos:
+                break
+    
+    # Insert the phantom car if there's a car that would be affected
+    if affected_car:
+
+        # Calculate distance to light
+        s = (light_pos - affected_car.pos[-1]) % L
+        
+        # Update headway for the affected car
+        affected_car.headway = s - phantom_car.length
+        affected_car.dv = affected_car.vel
+    
+    if insertion_idx is not None:
+            cars.insert(insertion_idx, phantom_car)
+    
+    return cars
+
+def remove_phantom_car(cars, L):
+    # First, sort cars by position to work with them in order
+    cars.sort(key=lambda car: car.pos[-1])
+    
+    # Remove phantom cars
+    cars = [car for car in cars if car.car_id != -1]
+    
+    # Update headways after removing phantom car, ensuring proper queue behavior
+    for i, car in enumerate(cars):
+        next_car = cars[(i + 1) % len(cars)]
+        car.headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
+        car.dv = car.vel - next_car.vel
+        
+        # If the next car is stopped or moving very slowly and is close, ensure this car behaves appropriately
+        if next_car.vel < 1 and car.headway < car.min_gap + 5:
+            car.vel = min(car.vel, next_car.vel)
+    
+    return cars
 
 def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_light):
 
@@ -151,14 +207,16 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     detect_vel = []
 
     # Update traffic light state
+    prev_state = traffic_light.status()
     traffic_light.update(time_step)
-    
     light_state = traffic_light.status()
-
-    if light_state == 'orange' and len(cars) == N:
-        cars = add_phantom_car(cars, traffic_light, L)
-    elif light_state == 'green' and len(cars) > N:
-        cars = remove_phantom_car(cars, L)
+    
+    # Handle state transitions
+    if prev_state != light_state:
+        if light_state == 'orange':
+            cars = add_phantom_car(cars, traffic_light, L)
+        elif light_state == 'green':
+            cars = remove_phantom_car(cars, L)
 
     cars = vc.update_cars(cars, time_step, L)
 
