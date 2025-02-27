@@ -25,7 +25,7 @@ class VehicleClass:
         self.comf_decel = comf_decel
         self.acc_max = acc_max
 
-        self.length = length
+        self.length = length 
 
     def update_cars(cars, time_step, L):
 

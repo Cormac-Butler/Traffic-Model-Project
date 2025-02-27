@@ -24,3 +24,6 @@ class TrafficLightClass:
             
     def status(self):
         return self.current_state
+
+    def time_in_current_state(self):
+        return self.time_in_state
