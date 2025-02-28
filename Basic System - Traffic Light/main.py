@@ -21,7 +21,7 @@ if __name__ == "__main__":
     steps_before_measure = 100
     detection_point = road_length / 2
     time_step = 0.5
-    green_duration = np.linspace(0, 80, 20)
+    green_duration = np.linspace(0, 100, 20)
 
     # Run simulations
     with mp.Pool(processes=mp.cpu_count()) as pool:
