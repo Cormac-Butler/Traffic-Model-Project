@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Run simulations
     with mp.Pool(processes=mp.cpu_count()) as pool:
         results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, gd, 'green') for gd in green_duration])
-        alt_results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, 100-gd, 'red') for gd in green_duration])
+        alt_results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, (100-gd), 'red') for gd in green_duration])
 
     # Write data to file
     print("Writing file...")
@@ -74,20 +74,19 @@ if __name__ == "__main__":
 
     # Organise data into a dictionary
     simulation_data2 = {
-        "cars_positions": cars_positions2,
+        "cars_positions2": cars_positions2,
         "road_length": road_length,
-        "global_density": global_density2,
-        "global_flow": global_flow2,
-        "local_density": local_density2,
-        "local_flow": local_flow2,
-        "global_average_velocity": global_average_velocity2,
-        "local_average_velocity": local_average_velocity2,
-        "green_durations": green_duration
+        "global_density2": global_density2,
+        "global_flow2": global_flow2,
+        "local_density2": local_density2,
+        "local_flow2": local_flow2,
+        "global_average_velocity2": global_average_velocity2,
+        "local_average_velocity2": local_average_velocity2,
+        "green_durations2": green_duration
     }
 
     # Save using pickle with highest protocol for speed optimisation
     with open('simulation_results_basic_system.pkl', 'wb') as file:
-        pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        pickle.dump(simulation_data2, file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump([simulation_data, simulation_data2], file, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("File writing complete.")
