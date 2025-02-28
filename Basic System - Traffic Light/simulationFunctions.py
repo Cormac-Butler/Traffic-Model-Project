@@ -184,7 +184,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     
     # Handle state transitions
     if light_state == 'red':
-        # Add phantom cars
+
         # Find the index to insert the phantom car without sorting
         insert_index = None
         for i in range(len(cars)):
@@ -193,19 +193,19 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
                 break
 
         # Create the phantom car
-        phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
+        phantom_car = vc(-1, [traffic_light.position], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
         
         # Insert the phantom car at the correct position
         if insert_index is not None:
             cars.insert(insert_index, phantom_car)
 
-            cars[i - 1].headway[-1] = ((cars[i].pos[-1] - cars[i - 1].pos[-1]) % L)
-            cars[i - 1].dv[-1] = cars[i - 1].vel[-1]
+            cars[i - 1].headway = ((cars[i].pos[-1] - cars[i - 1].pos[-1]) % L)
+            cars[i - 1].dv = cars[i - 1].vel
         else:
             cars.append(phantom_car)
 
-            cars[-2].headway[-1] = ((cars[-1].pos[-1] - cars[-2].pos[-1]) % L)
-            cars[-2].dv[-1] = cars[-2].vel[-1]
+            cars[-2].headway = ((cars[-1].pos[-1] - cars[-2].pos[-1]) % L)
+            cars[-2].dv = cars[-2].vel
             
     elif light_state == 'orange' and time_left > 4:
         cars = remove_phantom_car(cars, L)
