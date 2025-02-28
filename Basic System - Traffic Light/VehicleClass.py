@@ -45,6 +45,7 @@ class VehicleClass:
 
         for i, car in enumerate(cars):
             if car.car_id!= -1:
+
                 # Calculate desired bumper-to-bumper distance (s*)
                 s_star = car.min_gap + max(0, car.vel * car.time_gap + (car.vel * car.dv) / (2 * (car.acc_max * car.comf_decel)**0.5))
 
@@ -83,9 +84,11 @@ class VehicleClass:
         return cars
     
     def update_headway_dv(cars, L, time_step):
-    
+        
         for  i, car in enumerate(cars): 
             if car.car_id!= -1:
+
+                # Get next car
                 index = (i + 1) % len(cars) 
                 next_car = cars[index]
                 

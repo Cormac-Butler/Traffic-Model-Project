@@ -26,4 +26,4 @@ plot_graph(axes1[0, 0], data['green_durations'], data['global_flow'], 'Density (
 plt.savefig('durations_plot.png')
 
 # Visualisation
-tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 1, 5)
+tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 10, 5)

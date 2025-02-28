@@ -95,7 +95,6 @@ def analyse_local(track_det_time, track_det_vel, time):
 
     return loc_flow, loc_dens
 
-'''
 def add_phantom_car(cars, traffic_light, L):
 
     # Get the traffic light position
@@ -105,7 +104,7 @@ def add_phantom_car(cars, traffic_light, L):
     phantom_car = vc(-1, light_pos, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
 
     cars.sort(key=lambda car: car.pos[-1])
- 
+    
     for i in reversed(range(len(cars))):
 
         car = cars[i]
@@ -143,76 +142,6 @@ def remove_phantom_car(cars, L):
     new_cars.sort(key=lambda car: car.pos[-1])
 
     return new_cars
-    
-    cars = [car for car in cars if car.car_id!= -1]
-
-    for i, car in enumerate(cars):
-
-        next_car = cars[(i + 1) % len(cars)]
-        
-        car.headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
-        car.dv = car.vel - next_car.vel
-    
-    cars.sort(key=lambda car: car.pos[-1])
-
-    return cars
-'''
-
-'''
-def add_phantom_car(cars, traffic_light, L):
-    light_pos = traffic_light.position
-    phantom_car = vc(-1, light_pos, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5)
-    
-    # Find the car immediately behind the traffic light
-    insertion_idx = None
-    affected_car = None
-    
-    for i, car in enumerate(cars):
-
-        s_max = car.vel * traffic_light.orange_duration
-
-        if (car.pos[-1] + s_max) % L < light_pos:
-            insertion_idx = i + 1
-            affected_car = car
-
-            # Break at the last car before the light
-            if insertion_idx == len(cars) or cars[insertion_idx].pos[-1] > light_pos:
-                break
-    
-    # Insert the phantom car if there's a car that would be affected
-    if affected_car:
-
-        # Calculate distance to light
-        s = (light_pos - affected_car.pos[-1]) % L
-        
-        # Update headway for the affected car
-        affected_car.headway = s - phantom_car.length
-        affected_car.dv = affected_car.vel
-    
-    if insertion_idx is not None:
-            cars.insert(insertion_idx, phantom_car)
-    
-    return cars
-
-def remove_phantom_car(cars, L):
-    # First, sort cars by position to work with them in order
-    cars.sort(key=lambda car: car.pos[-1])
-    
-    # Remove phantom cars
-    cars = [car for car in cars if car.car_id != -1]
-    
-    # Update headways after removing phantom car, ensuring proper queue behavior
-    for i, car in enumerate(cars):
-        next_car = cars[(i + 1) % len(cars)]
-        car.headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
-        car.dv = car.vel - next_car.vel
-        
-        # If the next car is stopped or moving very slowly and is close, ensure this car behaves appropriately
-        if next_car.vel < 1 and car.headway < car.min_gap + 5:
-            car.vel = min(car.vel, next_car.vel)
-    
-    return cars
-'''
 
 def get_headway(cars, L):
 
@@ -240,53 +169,6 @@ def get_headway(cars, L):
     
     return cars
 
-def add_phantom_car(cars, traffic_light, L):
-    # Get the traffic light position
-    light_pos = traffic_light.position
-    
-    # Create phantom car at traffic light position
-    phantom_car = vc(-1, light_pos, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
-
-    # Make a copy and sort it to avoid modifying the original order
-    sorted_cars = sorted(cars, key=lambda car: car.pos[-1])
-    
-    insertion_index = None
-    
-    for i in range(len(sorted_cars)):
-        car = sorted_cars[i]
-        
-        # Calculate distance to light, accounting for loop
-        s = (light_pos - car.pos[-1]) % L
-        
-        # Max distance car can travel during orange light
-        max_s = car.vel * (traffic_light.orange_duration - traffic_light.time_in_state)
-        
-        # Check if car is before the light and won't make it through
-        if car.pos[-1] <= light_pos and max_s < s:
-            insertion_index = i + 1
-            break
-    
-    # Insert phantom car at the appropriate position if needed
-    if insertion_index is not None:
-        cars.insert(min(insertion_index, len(cars)), phantom_car)
-        
-    return cars
-
-def remove_phantom_car(cars, L):
-    # Identify real cars
-    real_cars = [car for car in cars if car.car_id != -1]
-    
-    if len(real_cars) == len(cars):
-        return cars  # No phantom cars to remove
-    
-    # Update headways for all real cars
-    for i in range(len(real_cars)):
-        next_car = real_cars[(i + 1) % len(real_cars)]
-        real_cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - real_cars[i].pos[-1]) % L
-        real_cars[i].dv = real_cars[i].vel - next_car.vel
-    
-    return real_cars
-
 def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_light):
 
     # Measurement variables
@@ -301,15 +183,41 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     light_state = traffic_light.status()
     
     # Handle state transitions
-    if light_state == 'orange' and time_left > 4:
+    if light_state == 'red':
+        # Add phantom cars
+        # Find the index to insert the phantom car without sorting
+        insert_index = None
+        for i in range(len(cars)):
+            if cars[i].pos[-1] >= traffic_light.position:
+                insert_index = i
+                break
+
+        # Create the phantom car
+        phantom_car = vc(-1, 0, [traffic_light.position], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
+        
+        # Insert the phantom car at the correct position
+        if insert_index is not None:
+            cars.insert(insert_index, phantom_car)
+
+            cars[i - 1].headway[-1] = ((cars[i].pos[-1] - cars[i - 1].pos[-1]) % L)
+            cars[i - 1].dv[-1] = cars[i - 1].vel[-1]
+        else:
+            cars.append(phantom_car)
+
+            cars[-2].headway[-1] = ((cars[-1].pos[-1] - cars[-2].pos[-1]) % L)
+            cars[-2].dv[-1] = cars[-2].vel[-1]
+            
+    elif light_state == 'orange' and time_left > 4:
         cars = remove_phantom_car(cars, L)
         cars = add_phantom_car(cars, traffic_light, L)
-        cars = get_headway(cars, L)
     elif light_state == 'green' and len(cars) > N:
         cars = remove_phantom_car(cars, L)
 
+    if light_state == 'green':
+        ...#cars.sort(key=lambda car: car.pos[-1])
+
     if light_state == 'orange':
-        cars = get_headway(cars, L)
+        ...#cars = get_headway(cars, L)
 
     cars = vc.update_cars(cars, time_step, L)
 
@@ -346,7 +254,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duratio
     track_det_time = []
     track_det_vel = [] 
 
-    traffic_light = tl(150, green_duration, 20, 120 - green_duration - 20)
+    traffic_light = tl(L/2, green_duration, 0, 100 - green_duration)
 
     # Initialise cars
     cars = init_simulation(N, L)
