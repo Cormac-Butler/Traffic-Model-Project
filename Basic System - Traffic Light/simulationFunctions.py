@@ -103,7 +103,7 @@ def add_phantom_car(cars, traffic_light, L):
     # Create phantom car at traffic light position
     phantom_car = vc(-1, light_pos, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10)
 
-    #cars.sort(key=lambda car: car.pos[-1])
+    cars.sort(key=lambda car: car.pos[-1])
  
     for i in reversed(range(len(cars))):
 
@@ -124,8 +124,6 @@ def add_phantom_car(cars, traffic_light, L):
 def remove_phantom_car(cars, L):
     
     new_cars = []
-
-    cars.sort(key=lambda car: car.pos[-1])
 
     for i, car in enumerate(cars):
 
