@@ -32,4 +32,4 @@ plt.tight_layout()
 plt.savefig('basic_plots.png')
 
 # Visualisation
-tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 1, 5)
+tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 250, 5)

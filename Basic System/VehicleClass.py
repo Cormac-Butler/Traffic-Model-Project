@@ -83,7 +83,7 @@ class VehicleClass:
         return cars
     
     def update_headway_dv(cars, L, time_step):
-        '''
+    
         for  i, car in enumerate(cars): 
             
             index = (i + 1) % len(cars) 
@@ -114,7 +114,7 @@ class VehicleClass:
                 # Update acceleration and velocity
                 car.acc = acc_new
                 car.vel = vel_new
-        '''
+        
         for i, car in enumerate(cars):
             next_car = cars[(i + 1) % len(cars)]
             headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
