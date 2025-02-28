@@ -132,7 +132,7 @@ def remove_phantom_car(cars, L):
         if next_car.car_id == -1:
             next_car = cars[(i + 2) % len(cars)]
             car.headway = ((next_car.pos[-1] - next_car.length) % L - car.pos[-1]) % L
-            car.dv = car.vel - next_car.vel
+            car.dv =   car.vel - next_car.vel
 
         if car.car_id != -1:
             new_cars.append(car)
@@ -182,42 +182,18 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     traffic_light.update(time_step)
     light_state = traffic_light.status()
     
+
     # Handle state transitions
-    if light_state == 'red':
-
-        # Find the index to insert the phantom car without sorting
-        insert_index = None
-        for i in range(len(cars)):
-            if cars[i].pos[-1] >= traffic_light.position:
-                insert_index = i
-                break
-
-        # Create the phantom car
-        phantom_car = vc(-1, [traffic_light.position], [0], [0], [0], [0], 0, 0, 0, 0, 0, 0, 0)
-        
-        # Insert the phantom car at the correct position
-        if insert_index is not None:
-            cars.insert(insert_index, phantom_car)
-
-            cars[i - 1].headway = ((cars[i].pos[-1] - cars[i - 1].pos[-1]) % L)
-            cars[i - 1].dv = cars[i - 1].vel
-        else:
-            cars.append(phantom_car)
-
-            cars[-2].headway = ((cars[-1].pos[-1] - cars[-2].pos[-1]) % L)
-            cars[-2].dv = cars[-2].vel
-            
-    elif light_state == 'orange' and time_left > 4:
+    if light_state == 'orange' and time_left > 4:
         cars = remove_phantom_car(cars, L)
         cars = add_phantom_car(cars, traffic_light, L)
     elif light_state == 'green' and len(cars) > N:
         cars = remove_phantom_car(cars, L)
 
-    if light_state == 'green':
-        ...#cars.sort(key=lambda car: car.pos[-1])
-
     if light_state == 'orange':
-        ...#cars = get_headway(cars, L)
+        cars = get_headway(cars, L)
+    
+    cars.sort(key=lambda car: car.pos[-1])
 
     cars = vc.update_cars(cars, time_step, L)
 
@@ -246,7 +222,7 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
 
     return cars, den, flo, detect_time, detect_vel
 
-def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duration):
+def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duration, ss):
 
     # Declare variables
     track_flow = []
@@ -254,7 +230,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duratio
     track_det_time = []
     track_det_vel = [] 
 
-    traffic_light = tl(L/2, green_duration, 0, 100 - green_duration)
+    traffic_light = tl(L/2, green_duration, 20, 100 - green_duration - 20, ss)
 
     # Initialise cars
     cars = init_simulation(N, L)
