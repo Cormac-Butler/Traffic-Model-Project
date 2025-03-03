@@ -1,6 +1,5 @@
 import numpy as np
 from VehicleClass import VehicleClass as vc
-from TrafficLightClass import TrafficLightClass as tl
 
 def init_simulation(N, L,):
 
@@ -222,15 +221,13 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
 
     return cars, den, flo, detect_time, detect_vel
 
-def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duration, ss):
+def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, traffic_light):
 
     # Declare variables
     track_flow = []
     track_dens = []
     track_det_time = []
     track_det_vel = [] 
-
-    traffic_light = tl(L/2, green_duration, 20, 100 - green_duration - 20, ss)
 
     # Initialise cars
     cars = init_simulation(N, L)
@@ -250,7 +247,7 @@ def Simulate_IDM(N, time_step, steps, steps_measure, det_point, L, green_duratio
     glob_flow, glob_dens = analyse_global(track_flow, track_dens)
     loc_flow, loc_dens = analyse_local(track_det_time, track_det_vel, steps * time_step)
 
-    print('Simulation for green duration =', green_duration, 'completed')
+    print('Simulation for green duration =', traffic_light.green_duration, 'completed')
 
     cars = remove_phantom_car(cars, L)
 
