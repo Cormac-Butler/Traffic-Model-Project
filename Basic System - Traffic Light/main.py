@@ -15,7 +15,8 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 if __name__ == "__main__":
 
     # Model parameters
-    number_of_cars = 30
+    number_of_cars_1 = 60
+    number_of_cars_2 = 60
     road_length = 500
     steps = 10000
     steps_before_measure = 100
@@ -25,8 +26,8 @@ if __name__ == "__main__":
 
     # Run simulations
     with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, gd, 'green') for gd in green_duration])
-        alt_results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, (100-gd), 'red') for gd in green_duration])
+        results = pool.starmap(run_simulation, [(number_of_cars_1, time_step, steps, steps_before_measure, detection_point, road_length, gd, 'green') for gd in green_duration])
+        alt_results = pool.starmap(run_simulation, [(number_of_cars_2, time_step, steps, steps_before_measure, detection_point, road_length, (100-gd), 'red') for gd in green_duration])
 
     # Write data to file
     print("Writing file...")

@@ -34,7 +34,7 @@ flow = [data2['global_flow2'][i] + data['global_flow'][i] for i in range(len(dat
 # Basic plots
 fig1, axes1 = plt.subplots(2, 3, figsize=(15, 10))
 plot_graph(axes1[0, 0], data['green_durations'], flow, 'Red Duration (s)', 'Flow (cars/hour)', 'Global Flow vs. Density', 'blue')
-plt.savefig('durations3_plot.png')
+plt.savefig('durations4_plot.png')
 
 # Visualisation
 tv.TrafficVisualization(data['cars_positions'][0], data['road_length'], 5, 10, 5)
