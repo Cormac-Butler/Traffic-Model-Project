@@ -29,6 +29,7 @@ def make_traffic_light(L, green_duration, ss):
 
     if green_duration == 0:
         orange_time = 0
+        ss = 'red'
     elif green_duration == 100:
         orange_time = 0
         green_duration = 120
@@ -38,13 +39,15 @@ def make_traffic_light(L, green_duration, ss):
 if __name__ == "__main__":
 
     # Model parameters
-    number_of_cars = 50
+    number_of_cars = 60
     road_length = 500
     steps = 10000
     steps_before_measure = 100
     detection_point = road_length / 2
     time_step = 0.5
     gd1 = np.linspace(0, 100, 40)
+
+    gd1 = [gd if gd < 100 else 120 for gd in gd1]
 
     with mp.Pool(processes=mp.cpu_count()) as pool:
         results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, make_traffic_light(road_length, gd, 'green')) for gd in gd1])

@@ -183,6 +183,8 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step, traffic_ligh
     
 
     # Handle state transitions
+    if light_state == 'red' and len(cars) == N:
+        cars = add_phantom_car(cars, traffic_light, L)
     if light_state == 'orange' and time_left > 4:
         cars = remove_phantom_car(cars, L)
         cars = add_phantom_car(cars, traffic_light, L)

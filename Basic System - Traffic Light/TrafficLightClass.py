@@ -12,13 +12,13 @@ class TrafficLightClass:
         self.time_in_state += time_step
         self.total_time += time_step
         
-        if self.current_state == "green" and self.time_in_state >= self.green_duration:
+        if self.current_state == "green" and self.time_in_state >= self.green_duration and self.green_duration != 120:
             self.current_state = "orange"
             self.time_in_state = 0
         elif self.current_state == "orange" and self.time_in_state >= self.orange_duration:
             self.current_state = "red"
             self.time_in_state = 0
-        elif self.current_state == "red" and self.time_in_state >= self.red_duration:
+        elif self.current_state == "red" and self.time_in_state >= self.red_duration and self.red_duration != 120:
             self.current_state = "green"
             self.time_in_state = 0
             
