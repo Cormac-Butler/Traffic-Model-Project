@@ -16,7 +16,7 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
 def calc_duaratoin(green_duration):
 
     cycle_time = 120
-    orange_time = 10
+    orange_time = 20
     
     red_time = green_duration + orange_time
     green_time = cycle_time - red_time
@@ -25,30 +25,30 @@ def calc_duaratoin(green_duration):
     
 def make_traffic_light(L, green_duration, ss):
     cycle_time = 120
-    orange_time = 10
+    orange_time = 20
+
+    if green_duration == 0:
+        orange_time = 0
+    elif green_duration == 100:
+        orange_time = 0
+        green_duration = 120
     
     return tl(L / 2, green_duration, orange_time, cycle_time - (green_duration + orange_time), ss)
 
 if __name__ == "__main__":
 
     # Model parameters
-    number_of_cars = 20
-    alt_number_of_cars = 60
+    number_of_cars = 50
     road_length = 500
     steps = 10000
     steps_before_measure = 100
     detection_point = road_length / 2
     time_step = 0.5
-    gd1 = np.linspace(10, 90, 20)
-    data = [calc_duaratoin(gd) for gd in gd1]
-    gd2, rd2 = zip(*data)
+    gd1 = np.linspace(0, 100, 40)
 
     with mp.Pool(processes=mp.cpu_count()) as pool:
         results = pool.starmap(run_simulation, [(number_of_cars, time_step, steps, steps_before_measure, detection_point, road_length, make_traffic_light(road_length, gd, 'green')) for gd in gd1])
-
-        alt_results = pool.starmap(run_simulation, [(alt_number_of_cars, time_step, steps, steps_before_measure, detection_point,road_length, make_traffic_light(road_length, gd, 'red')) for gd in gd2])
-
-
+    
     # Write data to file
     print("Writing file...")
 
@@ -84,31 +84,8 @@ if __name__ == "__main__":
         "green_durations": gd1
     }
 
-    for _, car_list, g_flow, g_density, l_flow, l_density, g_avg_vel, l_avg_vel in alt_results:
-        global_flow2.append(g_flow)
-        global_density2.append(g_density)
-        local_flow2.append(l_flow)
-        local_density2.append(l_density)
-        global_average_velocity2.append(g_avg_vel)
-        local_average_velocity2.append(l_avg_vel)
-    cars_positions2.append([car.pos for car in car_list])
-
-    # Organise data into a dictionary
-    simulation_data2 = {
-        "cars_positions2": cars_positions2,
-        "road_length": road_length,
-        "global_density2": global_density2,
-        "global_flow2": global_flow2,
-        "local_density2": local_density2,
-        "local_flow2": local_flow2,
-        "global_average_velocity2": global_average_velocity2,
-        "local_average_velocity2": local_average_velocity2,
-        "green_durations2": gd2,
-        "red_durations2": rd2
-    }
-
     # Save using pickle with highest protocol for speed optimisation
     with open('simulation_results_basic_system.pkl', 'wb') as file:
-        pickle.dump([simulation_data, simulation_data2], file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("File writing complete.")
