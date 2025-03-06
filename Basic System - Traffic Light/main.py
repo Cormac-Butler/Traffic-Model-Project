@@ -12,16 +12,6 @@ def run_simulation(N, time_step, steps, steps_before_measure, detection_point, r
     loc_avg_velocity = (loc_flow * 1000) / (loc_dens * 3600) if loc_dens != 0 else 0
 
     return N, cars, glob_flow, glob_density, loc_flow, loc_dens, glob_avg_velocity, loc_avg_velocity
-
-def calc_duaratoin(green_duration):
-
-    cycle_time = 120
-    orange_time = 20
-    
-    red_time = green_duration + orange_time
-    green_time = cycle_time - red_time
-
-    return green_time, red_time
     
 def make_traffic_light(L, green_duration, ss):
     cycle_time = 120

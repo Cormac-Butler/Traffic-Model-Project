@@ -103,46 +103,6 @@ def Step(N, cars, time_pass, time_measure, det_point, L, time_step):
     detect_time = []
     detect_vel = []
 
-    '''
-    # Store previous velocity and acceleration
-    for car in cars:
-        car.prev_vel = car.vel
-        car.prev_acc = car.acc
-
-    # Update headway and dv
-    for i in range(N):
-        next_car = cars[(i + 1) % N]
-        cars[i].headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
-        cars[i].dv = cars[i].vel - next_car.vel
-
-    # Calculate new accelerations
-    acc_new = np.zeros(N)
-    for i, car in enumerate(cars):
-        s_star = car.min_gap + max(0, car.vel * car.time_gap + (car.vel * car.dv) / (2 * np.sqrt(car.acc_max * car.comf_decel)))
-        acc_new[i] = car.acc_max * (1 - (car.vel / car.des_speed)**car.acc_exp - (s_star / car.headway)**2)
-
-    # Update velocities and positions
-    for i, car in enumerate(cars):
-
-        vel_new = car.vel + acc_new[i] * time_step
-        t = time_step
-        if vel_new < 0:
-            t  = - car.vel / acc_new[i]
-            vel_new = car.vel + acc_new[i] * t
-
-        pos_new = (car.pos[-1] + car.vel * t + 0.5 * acc_new[i] * t**2) % L
-        car.acc = acc_new[i]
-        car.vel = vel_new
-        car.pos.append(pos_new)
-
-    # Prevent overtaking or crashing
-    for i in range(N):
-        next_car = cars[(i + 1) % N]
-        headway = ((next_car.pos[-1] - next_car.length) % L - cars[i].pos[-1]) % L
-        if headway < car.min_gap / 2:
-            cars[i].pos[-1] = (next_car.pos[-1] - next_car.length - cars[i].min_gap) % L
-    '''
-
     cars = vc.update_cars(cars, time_step, L)
 
     # Take measurements
