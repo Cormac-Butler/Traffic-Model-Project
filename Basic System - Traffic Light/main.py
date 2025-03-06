@@ -88,7 +88,7 @@ if __name__ == "__main__":
     }
 
     # Save using pickle with highest protocol for speed optimisation
-    with open('simulation_results_basic_system.pkl', 'wb') as file:
+    with open('simulation_results_traffic_system.pkl', 'wb') as file:
         pickle.dump(simulation_data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("File writing complete.")
