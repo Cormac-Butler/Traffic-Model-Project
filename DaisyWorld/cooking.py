@@ -57,7 +57,7 @@ initial = [a_w0, a_b0]
 res = solve_ivp(DE, t_span, initial, args=(L,), dense_output=True, rtol=1e-8, atol=1e-8)
 
 # Create time points for plotting
-t = np.linspace(0, 1000, 1000)
+t = np.linspace(0, 50, 1000)
 solution = res.sol(t)
 
 # Plot population fractions
