@@ -51,7 +51,7 @@ a_w0 = 0.01  # Initial fraction of white daisies
 a_b0 = 0.01  # Initial fraction of black daisies
 t_span = (0, 1000)
 
-L_values = np.linspace(0.6, 2, 10)
+L_values = np.linspace(0.6, 2, 1000)
 steady_states = []
 temps_final = []
 
@@ -92,7 +92,6 @@ temps_final = np.array(temps_final)
 plt.figure(figsize=(10, 6))
 plt.plot(steady_states[:, 0], steady_states[:, 1], 'b-', label='White Daisies')
 plt.plot(steady_states[:, 0], steady_states[:, 2], 'k-', label='Black Daisies')
-plt.plot(steady_states[:, 0], steady_states[:, 3], 'g-', label='Bare Ground')
 plt.xlabel('Luminosity (L)')
 plt.ylabel('Final Area Fraction')
 plt.legend()
