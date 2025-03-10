@@ -54,6 +54,8 @@ t_span = (0, 1000)
 L_values = np.linspace(0.6, 2, 1000)
 steady_states = []
 temps_final = []
+temps_final2 = []
+temps_final3 = []
 
 plt.figure(figsize=(12, 6))
 colors = ['r', 'g', 'b', 'k', 'm']
@@ -74,8 +76,10 @@ plt.title("Daisy Populations Over Time for Different Luminosities")
 plt.grid(True)
 plt.show()
 
+initial = [a_w0, a_b0]
+
+# Increasing
 for L in L_values:
-    initial = [a_w0, a_b0]
     res = solve_ivp(DE, t_span, initial, args=(L,), dense_output=True, rtol=1e-8, atol=1e-8)
     
     final_aw = res.y[0, -1]
@@ -85,10 +89,25 @@ for L in L_values:
 
     temps = calc_temps([final_aw, final_ab], L)
     temps_final.append([L, temps[0] - 273.15])
+    temps_final2.append([L, temps[1] - 273.15])
+    temps_final3.append([L, temps[2] - 273.15])
+
+    if final_aw <= 0:
+        final_aw = 0.01
+    if final_ab <= 0:
+        final_ab = 0.01
+
+    initial = [final_aw, final_ab]
+
+    
 
 steady_states = np.array(steady_states)
 temps_final = np.array(temps_final)
+temps_final2 = np.array(temps_final2)
+temps_final3 = np.array(temps_final3)
 
+
+#Luminosity and area graphs
 plt.figure(figsize=(10, 6))
 plt.plot(steady_states[:, 0], steady_states[:, 1], 'b-', label='White Daisies')
 plt.plot(steady_states[:, 0], steady_states[:, 2], 'k-', label='Black Daisies')
@@ -97,12 +116,74 @@ plt.ylabel('Final Area Fraction')
 plt.legend()
 plt.title("Daisy Populations vs. Luminosity")
 plt.grid(True)
-plt.show()
+plt.savefig('Tem')
 
+
+#Luminosity and temperature graphs 
 plt.figure(figsize=(10, 6))
-plt.plot(temps_final[:, 0], temps_final[:, 1], 'r-')
+plt.plot(temps_final[:, 0], temps_final[:, 1], 'r-', label='Planetary Temperature')
+plt.plot(temps_final2[:, 0], temps_final2[:, 1], 'b-', label='White Temp')
+plt.plot(temps_final3[:, 0], temps_final3[:, 1], 'g-', label='Black Temp')
 plt.xlabel('Luminosity (L)')
 plt.ylabel('Final Planetary Temperature (°C)')
 plt.title("Final Planetary Temperature vs. Luminosity")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+
+# Decreasing
+initial = [a_w0, a_b0]
+
+for L in reversed(L_values):
+    res = solve_ivp(DE, t_span, initial, args=(L,), dense_output=True, rtol=1e-8, atol=1e-8)
+    
+    final_aw = res.y[0, -1]
+    final_ab = res.y[1, -1]
+    final_ag = p - final_aw - final_ab
+    steady_states.append([L, final_aw, final_ab, final_ag])
+
+    temps = calc_temps([final_aw, final_ab], L)
+    temps_final.append([L, temps[0] - 273.15])
+    temps_final2.append([L, temps[1] - 273.15])
+    temps_final3.append([L, temps[2] - 273.15])
+
+    if final_aw <= 0:
+        final_aw = 0.01
+    if final_ab <= 0:
+        final_ab = 0.01
+
+    initial = [final_aw, final_ab]
+
+    
+
+steady_states = np.array(steady_states)
+temps_final = np.array(temps_final)
+temps_final2 = np.array(temps_final2)
+temps_final3 = np.array(temps_final3)
+
+
+#Luminosity and area graphs
+plt.figure(figsize=(10, 6))
+plt.plot(steady_states[:, 0], steady_states[:, 1], 'b-', label='White Daisies')
+plt.plot(steady_states[:, 0], steady_states[:, 2], 'k-', label='Black Daisies')
+plt.xlabel('Luminosity (L)')
+plt.ylabel('Final Area Fraction')
+plt.legend()
+plt.title("Daisy Populations vs. Luminosity")
+plt.grid(True)
+plt.savefig('Tem')
+
+
+#Luminosity and temperature graphs 
+plt.figure(figsize=(10, 6))
+plt.plot(temps_final[:, 0], temps_final[:, 1], 'r-', label='Planetary Temperature')
+plt.plot(temps_final2[:, 0], temps_final2[:, 1], 'b-', label='White Temp')
+plt.plot(temps_final3[:, 0], temps_final3[:, 1], 'g-', label='Black Temp')
+plt.xlabel('Luminosity (L)')
+plt.ylabel('Final Planetary Temperature (°C)')
+plt.title("Final Planetary Temperature vs. Luminosity")
+plt.legend()
 plt.grid(True)
 plt.show()
