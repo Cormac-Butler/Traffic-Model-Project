@@ -98,14 +98,11 @@ for L in L_values:
         final_ab = 0.01
 
     initial = [final_aw, final_ab]
-
-    
-
+ 
 steady_states = np.array(steady_states)
 temps_final = np.array(temps_final)
 temps_final2 = np.array(temps_final2)
 temps_final3 = np.array(temps_final3)
-
 
 #Luminosity and area graphs
 plt.figure(figsize=(10, 6))
@@ -117,7 +114,6 @@ plt.legend()
 plt.title("Daisy Populations vs. Luminosity")
 plt.grid(True)
 plt.savefig('Tem')
-
 
 #Luminosity and temperature graphs 
 plt.figure(figsize=(10, 6))
@@ -131,10 +127,12 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-
-
 # Decreasing
 initial = [a_w0, a_b0]
+steady_states = []
+temps_final = []
+temps_final2 = []
+temps_final3 = []
 
 for L in reversed(L_values):
     res = solve_ivp(DE, t_span, initial, args=(L,), dense_output=True, rtol=1e-8, atol=1e-8)
@@ -156,13 +154,10 @@ for L in reversed(L_values):
 
     initial = [final_aw, final_ab]
 
-    
-
 steady_states = np.array(steady_states)
 temps_final = np.array(temps_final)
 temps_final2 = np.array(temps_final2)
 temps_final3 = np.array(temps_final3)
-
 
 #Luminosity and area graphs
 plt.figure(figsize=(10, 6))
